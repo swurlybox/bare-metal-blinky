@@ -18,7 +18,7 @@ thats used if the target processor can't perform some computation in hardware)\
 link map to a mapfile
 LDFLAGS ?=  -Tlink.ld -nostartfiles -nostdlib --specs nano.specs -lc -lgcc \
             -Wl,--gc-sections -Wl,-Map=$@.map
-SOURCES =   main.c
+SOURCES =   main.c startup.c gpio.c systick.c
 
 
 build: firmware.elf
