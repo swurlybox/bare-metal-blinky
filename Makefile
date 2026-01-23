@@ -18,13 +18,13 @@ thats used if the target processor can't perform some computation in hardware)\
 link map to a mapfile
 LDFLAGS ?=  -Tlink.ld -nostartfiles -nostdlib --specs nano.specs -lc -lgcc \
             -Wl,--gc-sections -Wl,-Map=$@.map
-SOURCES =   main.c startup.c gpio.c systick.c
-
+SOURCES =   main.c startup.c gpio.c systick.c usart.c
+LIBS    =   -lm
 
 build: firmware.elf
 
 firmware.elf: $(SOURCES)
-	arm-none-eabi-gcc $(SOURCES) $(CFLAGS) $(LDFLAGS) -o $@
+	arm-none-eabi-gcc $(SOURCES) $(CFLAGS) $(LDFLAGS) $(LIBS) -o $@
 
 firmware.bin: firmware.elf
 	arm-none-eabi-objcopy -O binary $< $@

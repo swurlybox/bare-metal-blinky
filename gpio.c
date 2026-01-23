@@ -6,10 +6,12 @@
 #include "rcc.h"
 
 #define BIT(x) (1U << (x))
+#define GPIO(bank) ((struct gpio *) (0x40020000 + (0x400 * (bank))))
 
 void gpio_set_mode(uint16_t pin, uint8_t mode) {
     struct gpio *gpio = GPIO(PINBANK(pin));
     uint8_t n = (uint8_t) PINNO(pin);
+    RCC->AHB1ENR |= BIT(PINBANK(pin));
     gpio->MODER &= ~(3U << (n * 2));
     gpio->MODER |= (mode & 3) << (n * 2);
 }
@@ -31,4 +33,22 @@ void gpio_bank_disable(uint8_t bank) {
 void gpio_write(uint16_t pin, bool val) {
     struct gpio *gpio = GPIO(PINBANK(pin));
     gpio->BSRR = (1U << PINNO(pin)) << (val ? 0 : 16);
+}
+
+/* pin upper byte is bank num, pin lower byte is pin number.
+    af_num is a value between 0-15.
+*/
+void gpio_set_af(uint16_t pin, uint8_t af_num) {
+    struct gpio *gpio = GPIO(PINBANK(pin));
+    uint8_t n = (uint8_t) PINNO(pin);
+
+    /* NOTE: I still don't know why the guide opts for 15UL rather than 15U?
+        Worst possible case analysis:
+            n = 255;
+            255 & 7 gets us 7.
+            7 * 4 = 28;
+            15 << 28 is within 32 bits. 
+    */ 
+    gpio->AFR[n >> 3] &= ~(15U << ((n & 7) * 4));
+    gpio->AFR[n >> 3] |= ((uint32_t) af_num & 15U) << ((n & 7) * 4);
 }

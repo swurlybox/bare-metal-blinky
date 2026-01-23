@@ -10,6 +10,8 @@
 #define OFF (0)
 #define ON  (1)
 
+#define SYSTICK ((struct systick *) (0xE000E010))
+
 static volatile uint8_t is_systick_init = NO;
 
 void systick_init(uint32_t ticks) {
@@ -36,7 +38,6 @@ void delay(unsigned ms) {
     while(s_ticks < until) (void) 0;
 }
 
-/* TODO: Test arbitary timer. */
 void init_timer_t(struct timer_t *timer, uint32_t period) {
     /* struct defined in systick.h */
     if (timer == NULL) { return; }

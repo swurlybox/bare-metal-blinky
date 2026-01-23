@@ -1,5 +1,7 @@
 /*
-    API for interfacing with the SysTick Interrupt peripheral.
+    API for interfacing with the SysTick Interrupt peripheral. systick_init
+    must be called first before using this API, as all functions in this API
+    depends on SysTick peripheral to be initialized first.
 */
 #ifndef SYSTICK_H
 #define SYSTICK_H
@@ -10,8 +12,6 @@
 struct systick {
     volatile uint32_t CTRL, LOAD, VAL, CALIB;
 };
-
-#define SYSTICK ((struct systick *) 0xE000E010)
 
 void systick_init(uint32_t ticks);
 void delay(unsigned ms);
