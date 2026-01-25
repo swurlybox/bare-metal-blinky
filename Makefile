@@ -16,9 +16,11 @@ from Newlib (former is standard c library, latter is low-level arithmetic api\
 thats used if the target processor can't perform some computation in hardware)\
 , garbage collect unused sections of code TODO: -Wl,--gc-sections , print a \
 link map to a mapfile
-LDFLAGS ?=  -Tlink.ld -nostartfiles -nostdlib --specs nano.specs -lc -lgcc \
+LDSCRIPT_LOC = ./setup/link.ld
+LDFLAGS ?=  -T$(LDSCRIPT_LOC) -nostartfiles -nostdlib --specs nano.specs -lc -lgcc \
             -Wl,--gc-sections -Wl,-Map=$@.map
-SOURCES =   main.c startup.c gpio.c systick.c usart.c
+# Compile all c files found in our project
+SOURCES =   $(shell find . -name "*.c")
 LIBS    =   -lm
 
 build: firmware.elf

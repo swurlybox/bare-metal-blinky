@@ -1,9 +1,9 @@
 /* 
     Main application logic and startup code.
 */
-#include "gpio.h"
-#include "systick.h"
-#include "usart.h"
+#include "peripherals/gpio.h"
+#include "peripherals/systick.h"
+#include "peripherals/usart.h"
 
 #define CLOCK_SPEED (16000000)
 #define TICKS_PER_MILLISECOND (CLOCK_SPEED / 1000)

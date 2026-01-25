@@ -1,0 +1,2 @@
+Contains the APIs for interacting with the peripherals on the STM32F446RE
+NUCLEO board. Might as well be our HAL library.
