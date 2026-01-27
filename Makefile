@@ -18,8 +18,8 @@ thats used if the target processor can't perform some computation in hardware)\
 , garbage collect unused sections of code TODO: -Wl,--gc-sections , print a \
 link map to a mapfile
 LDSCRIPT_LOC = ./setup/link.ld
-LDFLAGS ?=  -T$(LDSCRIPT_LOC) -nostartfiles -nostdlib --specs nano.specs -lc -lgcc \
-            -Wl,--gc-sections -Wl,-Map=$@.map
+LDFLAGS ?=  -T$(LDSCRIPT_LOC) -nostartfiles -nostdlib --specs nano.specs -lc \
+            -lgcc -Wl,--gc-sections -Wl,-Map=$@.map -u _printf_float
 # Compile all c files found in our project
 SOURCES =   $(shell find . -name "*.c")
 LIBS    =   -lm

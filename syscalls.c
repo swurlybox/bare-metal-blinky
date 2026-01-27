@@ -1,6 +1,24 @@
 /* Low level system calls, which may be called by C standard library API */
 #include <sys/stat.h>
+#include <errno.h>
 #include "peripherals/usart.h"
+
+/* error is usually an invalid argument to a standard c func, but choice
+    of errno's value doesn't matter too much, since its called by exit. */
+int _kill(int pid, int signal) {
+    (void) pid, (void) signal;
+    errno = EINVAL;
+    return -1;
+}
+
+void _exit(int status) {
+    _kill(status, -1);
+    while (1) { }   /* Just hang in an infinite while loop */
+}
+
+int _getpid(void) {
+    return 1;
+}
 
 int _write(int fd, char *ptr, int len) { 
     if (fd == 1) uart_write_buf(USART2, ptr, (size_t) len);

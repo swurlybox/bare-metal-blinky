@@ -11,6 +11,8 @@
 #define CLOCK_SPEED (16000000)
 #define TICKS_PER_MILLISECOND (CLOCK_SPEED / 1000)
 
+
+
 int main(void) {
     /* Config SysTick, generate interrupt every ms, needed for delay */
     systick_init(TICKS_PER_MILLISECOND); 
@@ -23,9 +25,15 @@ int main(void) {
     gpio_bank_enable((uint8_t) PINBANK(led));   /* enable bank c*/
     gpio_set_mode(led, GPIO_MODE_OUTPUT);       /* set pin for output */
 
+    /* NOTE: Test printing a floating point value to UART. */
+    float f_val = 123.456F; 
+    /* NOTE: floats passed as variadic argument is converted to double.
+        Explicit cast to double is required to avoid compiler warning. */
+    printf("%f\r\n", (double) f_val);
+
     /* Blink every second */
     struct timer_t timer;
-    init_timer_t(&timer, 100);
+    init_timer_t(&timer, 5000);
     for (;;) {
         /* Timer polling */
         if(timer_expired(&timer)) {
