@@ -5,6 +5,9 @@
 #include "peripherals/systick.h"
 #include "peripherals/usart.h"
 
+#include <stdio.h>
+#include <math.h>
+
 #define CLOCK_SPEED (16000000)
 #define TICKS_PER_MILLISECOND (CLOCK_SPEED / 1000)
 
@@ -22,26 +25,16 @@ int main(void) {
 
     /* Blink every second */
     struct timer_t timer;
-    init_timer_t(&timer, 1000);
+    init_timer_t(&timer, 100);
     for (;;) {
+        /* Timer polling */
         if(timer_expired(&timer)) {
             static bool on;
             gpio_write(led, on);
-            on = !on;
-            if (on) {
-                uart_write_buf(USART2, "on\r\n", 4);
-            } else {
-                uart_write_buf(USART2, "off\r\n", 5);
-            }
+            on = !on; 
+            printf("LED: %d, tick: %lu\r\n", on, get_s_ticks());  
         }
-        // We can do other stuff here.
-
-        /*
-        gpio_write(led, true);
-        delay(1000);
-        gpio_write(led, false);
-        delay(1000);
-        */
+        /* Do other work */ 
     }
     return 0;
 }

@@ -8,6 +8,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+/* Upper byte is the bank value, lower byte is the pin no. value */
 #define PIN(bank, num) ((((bank) - 'A') << 8) | (num))
 #define PINNO(pin) (pin & 255)
 #define PINBANK(pin) (pin >> 8)

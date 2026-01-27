@@ -10,7 +10,6 @@ struct uart {
     volatile uint32_t SR, DR, BRR, CR1, CR2, CR3, GTPR;
 };
 
-/* If we want to use more, remove the define and setup pins in uart_init */
 /* APB2 */
 //#define USART6 ((struct uart *) (0x40011400))
 //#define USART1 ((struct uart *) (0x40011000))
@@ -39,7 +38,6 @@ struct uart {
 */
 
 void uart_init(struct uart *uart, unsigned long baud);
-/* TODO: Implement read/write UART ops */
 uint8_t uart_read_ready(struct uart *uart);
 uint8_t uart_read_byte(struct uart *uart);
 void uart_write_byte(struct uart *uart, uint8_t byte);

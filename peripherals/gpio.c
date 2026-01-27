@@ -35,20 +35,9 @@ void gpio_write(uint16_t pin, bool val) {
     gpio->BSRR = (1U << PINNO(pin)) << (val ? 0 : 16);
 }
 
-/* pin upper byte is bank num, pin lower byte is pin number.
-    af_num is a value between 0-15.
-*/
 void gpio_set_af(uint16_t pin, uint8_t af_num) {
     struct gpio *gpio = GPIO(PINBANK(pin));
-    uint8_t n = (uint8_t) PINNO(pin);
-
-    /* NOTE: I still don't know why the guide opts for 15UL rather than 15U?
-        Worst possible case analysis:
-            n = 255;
-            255 & 7 gets us 7.
-            7 * 4 = 28;
-            15 << 28 is within 32 bits. 
-    */ 
+    uint8_t n = (uint8_t) PINNO(pin); 
     gpio->AFR[n >> 3] &= ~(15U << ((n & 7) * 4));
     gpio->AFR[n >> 3] |= ((uint32_t) af_num & 15U) << ((n & 7) * 4);
 }

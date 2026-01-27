@@ -3,14 +3,13 @@
     peripherals.
 
     By default, the STM32 has all peripherals disabled on power up in order to
-    save power. The peripherals we wish to use must be enabled during runtime,
-    and we do this by setting certain registers in the RCC unit.
+    save power. The peripherals we wish to use must have their clock enabled 
+    during runtime, and we do this by setting certain registers in the RCC 
+    unit.
 
     AHB1 is where the GPIO's live. Thus we need to interact with:
     
     RCC_AHB1ENR, bits 0-7 enable the gpio banks A-H peripherals.
-
-
 */
 #ifndef RCC_H
 #define RCC_H

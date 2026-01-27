@@ -1,15 +1,20 @@
 #include "usart.h"
 #include "gpio.h"
 #include "rcc.h"
-#include <math.h> // may have to link this in
+#include <math.h>
 
 #define FREQ (16000000U)
 #define BIT(x) (1U << (x))
 
-/* pass in the baud rate: ex 115200*/
+/* 8 bit, 1 parity, oversampling 16. User specifies UART interface and baud */
 void uart_init(struct uart *uart, unsigned long baud) {
     /* tx and rx pins correspond to certain GPIO pins, af can differ depending
-        on which usart interface we're using. */
+        on which usart interface we're using. 
+        TODO: (optional) Handle other USART interfaces. This shit is better
+        done via auto code generation from pin configurations in the vendor
+        IDE, since we ultimately decide (hardcode) which pins we want to use
+        for each USART interface.
+    */
     uint8_t af;
     uint16_t tx, rx;
 
@@ -27,18 +32,12 @@ void uart_init(struct uart *uart, unsigned long baud) {
     
     uart->CR1 = 0; 
 
-    /* BRR calculation */
-   
-    /* TODO: Use a debugger here! Shit seems to go downhill once I use floats*/
-    /* For now, hardcode the BRR register value assuming 115200 baud rate
-        and oversampling by 16, OVER8=0 */
+    /* BRR calculation: DONE: Seems to work now after enabling FPU */ 
     uint8_t OVER8 = 0;
-    uint16_t mantissa, fractional;
+    uint32_t mantissa, fractional;
     float usartdiv = ((float) (FREQ)) / ((float) (8U * (2U - OVER8) * baud));
-    mantissa = (uint16_t) floorf(usartdiv);
-    mantissa = 0x8; /* hardcode */
-    fractional = ((uint16_t) roundf((usartdiv - (float) mantissa) * 16.0F));
-    fractional = 0xB; /* hardcode */
+    mantissa = (uint32_t) floorf(usartdiv);
+    fractional = (uint32_t) roundf((usartdiv - (float) mantissa) * 16.0F);
     uart->BRR = (mantissa << 4) | (fractional << 0);
     
     uart->CR1 |= BIT(13) | BIT(2) | BIT(3);

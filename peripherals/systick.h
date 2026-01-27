@@ -23,6 +23,7 @@ struct timer_t {
     uint8_t overflow_fl;
 };
 
+uint32_t get_s_ticks(void);
 void init_timer_t(struct timer_t *timer, uint32_t period);
 bool timer_expired(struct timer_t *timer);
 

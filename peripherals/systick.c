@@ -15,8 +15,7 @@
 static volatile uint8_t is_systick_init = NO;
 
 void systick_init(uint32_t ticks) {
-    if(ticks - 1 > 0xFFFFFF) return;    // SysTick counter is a 24-bit value.
-    
+    if(ticks - 1 > 0xFFFFFF) return;    // SysTick counter is a 24-bit value.    
     SYSTICK->LOAD = ticks - 1;                  // Set reload value       
     SYSTICK->VAL = 0;                           // Reset counter value to 0.
     SYSTICK->CTRL = BIT(0) | BIT(1) | BIT(2);   // Enable SysTick w/ proc. clk
@@ -26,6 +25,10 @@ void systick_init(uint32_t ticks) {
 static volatile uint32_t s_ticks;
 void SysTick_Handler(void) {
     s_ticks++;
+}
+
+uint32_t get_s_ticks(void) {
+    return s_ticks;
 }
 
 /* If systick isn't init, default ticks is 16000, or every millisec. */

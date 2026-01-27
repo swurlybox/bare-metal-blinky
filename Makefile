@@ -2,7 +2,8 @@
 each function and data item in its own section, look relative to current dir \
 for included header files, which target architecture we're compiling for, \
 operate on thumb state (16-bit ISA), use hardware floating point instructions \
-fpu version is: fpv4 architecture, single precision, 16 registers
+fpu version is: fpv4 architecture, single precision, 16 registers \
+TODO: changed -0s to -O0 for debugging
 CFLAGS  ?=  -W -Wall -Wextra -Werror -Wundef -Wshadow -Wdouble-promotion \
             -Wformat-truncation -fno-common -Wconversion \
             -g3 -Os -ffunction-sections -fdata-sections -I. \
