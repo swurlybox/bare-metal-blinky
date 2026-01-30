@@ -4,14 +4,13 @@
 #include "peripherals/gpio.h"
 #include "peripherals/systick.h"
 #include "peripherals/usart.h"
+#include "peripherals/timer.h"
 
 #include <stdio.h>
 #include <math.h>
 
 #define CLOCK_SPEED (16000000)
 #define TICKS_PER_MILLISECOND (CLOCK_SPEED / 1000)
-
-
 
 int main(void) {
     /* Config SysTick, generate interrupt every ms, needed for delay */
@@ -20,27 +19,37 @@ int main(void) {
     /* Config USART2 for serial debug output */
     uart_init(USART2, 115200);
 
-    /* Setup GPIO: GPIOC13, Pin 1 of CN7 */
-    uint16_t led = PIN('C', 10);                /* vdd pin for led */
-    gpio_bank_enable((uint8_t) PINBANK(led));   /* enable bank c*/
-    gpio_set_mode(led, GPIO_MODE_OUTPUT);       /* set pin for output */
-
-    /* NOTE: Test printing a floating point value to UART. */
-    float f_val = 123.456F; 
-    /* NOTE: floats passed as variadic argument is converted to double.
-        Explicit cast to double is required to avoid compiler warning. */
-    printf("%f\r\n", (double) f_val);
-
-    /* Blink every second */
+    /* Hook up TIM2 to PA15 (Pin 17 CN7)*/
+    timer_init();
+    uint16_t led = PIN('A', 15);            /* vdd pin for led */
+    gpio_set_mode(led, GPIO_MODE_AF);       /* set pin for output */
+    gpio_set_af(led, 1);                    /* enable TIM2 for A15 */ 
+    
+    /* Fade in and out */
     struct timer_t timer;
-    init_timer_t(&timer, 5000);
+    uint32_t duty_cycle = 0;
+    int8_t direction = 1;   // 1 for up, 0 for down
+    init_timer_t(&timer, 100);
     for (;;) {
         /* Timer polling */
         if(timer_expired(&timer)) {
-            static bool on;
-            gpio_write(led, on);
-            on = !on; 
-            printf("LED: %d, tick: %lu\r\n", on, get_s_ticks());  
+            /* We want fade in and out behaviour. */
+            if (duty_cycle >= 100) {
+                direction = 0;
+            }
+            if (duty_cycle == 0) {
+                direction = 1;
+            }
+            if (direction == 1) {
+                duty_cycle++;
+            }
+            if (direction == 0) {
+                duty_cycle--;
+            }
+            timer_pwm_set_duty_cycle((float) duty_cycle);
+            printf("LED Duty Cycle: %ld, dir: %d\r\n", duty_cycle, direction);
+            printf("TIM2 COUNT: %ld, TIM2 CCR: %ld\r\n", TIM2->CNT, 
+                TIM2->CCR1);
         }
         /* Do other work */ 
     }
