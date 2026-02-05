@@ -19,6 +19,7 @@ void uart_init(struct uart *uart, unsigned long baud) {
     uint16_t tx, rx;
 
     if (uart == USART2) {
+        /* Choice of A2 and A3 because that redirects to our host PC */
         RCC->APB1ENR |= BIT(17);
         tx = PIN('A', 2);
         rx = PIN('A', 3);

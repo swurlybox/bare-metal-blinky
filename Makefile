@@ -28,6 +28,7 @@ build: firmware.elf
 
 firmware.elf: $(SOURCES)
 	arm-none-eabi-gcc $(SOURCES) $(CFLAGS) $(LDFLAGS) $(LIBS) -o $@
+	arm-none-eabi-objdump -d $@ >> $@.list
 
 firmware.bin: firmware.elf
 	arm-none-eabi-objcopy -O binary $< $@
