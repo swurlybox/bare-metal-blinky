@@ -1,16 +1,8 @@
+/* API for interacting with hardware timer peripheral. */
 #ifndef TIMER_H
 #define TIMER_H
 
 #include <stdint.h>
-/*
-    We want to use a timer for PWM. 
-    In order to do this, we need to set a couple of registers in our timer
-    peripheral.
-
-    Once the timer is configured properly, it'll generate an interrupt every
-    time the comparison value changes. We 
-
-*/
 
 /* TIM2 to TIM5 registers */
 struct timer {

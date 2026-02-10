@@ -6,16 +6,19 @@
 #define ARR_VAL     (1000)
 #define TIMER_FREQ  (1000)
 
-/* Enables TIM2 Channel 1 for PWM output
-    w/ counter increment frequency 1KHz and 1000 ARR
-    duty cycle granularity */
-void timer_init(void) {
-    /* Enable the clock to this peripheral (RCC) */
-    RCC->APB1ENR |= BIT(0); 
+/* NOTE: Initializes TIM2 Channel 1 for PWM output.
+    Configurations:
+        Counter increment frequency:    1KHz
+        Auto Reload Register:           1000
+            ^ influences the granularity or possible values our timer counter
+            can have. */
 
-    /* Set up our timer's mode */
-    TIM2->CCMR1 &= ~(15U);  /* Reset channel 1, default mode output */
-    TIM2->CCMR1 |= (6U << 4) | BIT(3); /* Set PWM mode, enable preload */
+void timer_init(void) {
+    RCC->APB1ENR |= BIT(0); /* Enable TIM2 peripheral clock */ 
+
+    /* Set up TIM2 Channel 1 for PWM output mode. */
+    TIM2->CCMR1 &= ~(15U);      /* Reset channel 1, default mode output */
+    TIM2->CCMR1 |= (6U << 4) | BIT(3);  /* Set PWM mode, enable preload */
 
     /* Set the prescaler and ARR initial values */
     TIM2->PSC = 15; /* +1 internally to equal 16 (avoids divide by 0 error) */

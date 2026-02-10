@@ -1,7 +1,4 @@
-/*
-    API for accessing GPIO and setting bits in GPIO related configuration
-    registers.
-*/
+/* API for interacting with the GPIO peripheral. */
 #ifndef GPIO_H
 #define GPIO_H
 

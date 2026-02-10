@@ -6,20 +6,23 @@
 #define FREQ (16000000U)
 #define BIT(x) (1U << (x))
 
-/* 8 bit, 1 parity, oversampling 16. User specifies UART interface and baud */
+/* Initialize USART2 for serial debug output, sent to the host PC
+    USART Configurations:
+        Data Frame:     8 bits
+        Parity:         1-bit
+        Oversampling:   16 bits
+        Baud-Rate:      (decided by user; 115200 is what I would use)
+
+    NOTE: Could generalize this to initialize other USART interfaces, but
+        there's no good reason for me to do so at the moment.
+*/
 void uart_init(struct uart *uart, unsigned long baud) {
-    /* tx and rx pins correspond to certain GPIO pins, af can differ depending
-        on which usart interface we're using. 
-        TODO: (optional) Handle other USART interfaces. This shit is better
-        done via auto code generation from pin configurations in the vendor
-        IDE, since we ultimately decide (hardcode) which pins we want to use
-        for each USART interface.
-    */
     uint8_t af;
     uint16_t tx, rx;
 
+    /* Choice of A2 and A3 because that has been hardwired/soldered on
+        the board to direct USART2 communications to our host PC */
     if (uart == USART2) {
-        /* Choice of A2 and A3 because that redirects to our host PC */
         RCC->APB1ENR |= BIT(17);
         tx = PIN('A', 2);
         rx = PIN('A', 3);

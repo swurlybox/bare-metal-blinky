@@ -15,15 +15,15 @@ struct systick {
 
 void systick_init(uint32_t ticks);
 void delay(unsigned ms);
+uint32_t get_s_ticks(void);
 
-/* ---------------------------------------- */
-
+/* NOTE: Software implemented timer based on systick.
+    Don't confuse this with the hardware timer peripheral. */
 struct timer_t {
     uint32_t period, expiry;
     uint8_t overflow_fl;
 };
 
-uint32_t get_s_ticks(void);
 void init_timer_t(struct timer_t *timer, uint32_t period);
 bool timer_expired(struct timer_t *timer);
 

@@ -23,11 +23,12 @@ LDFLAGS ?=  -T$(LDSCRIPT_LOC) -nostartfiles -nostdlib --specs nano.specs -lc \
 # Compile all c files found in our project
 SOURCES =   $(shell find . -name "*.c")
 LIBS    =   -lm
+MACROS  =   -DDEV_ENV
 
 build: firmware.elf
 
 firmware.elf: $(SOURCES)
-	arm-none-eabi-gcc $(SOURCES) $(CFLAGS) $(LDFLAGS) $(LIBS) -o $@
+	arm-none-eabi-gcc $(SOURCES) $(CFLAGS) $(MACROS) $(LDFLAGS) $(LIBS) -o $@
 	arm-none-eabi-objdump -d $@ >> $@.list
 
 firmware.bin: firmware.elf

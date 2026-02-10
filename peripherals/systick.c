@@ -23,7 +23,7 @@ void systick_init(uint32_t ticks) {
 }
 
 static volatile uint32_t s_ticks;
-void SysTick_Handler(void) {
+void SysTick_Handler(void) {    /* Systick interrupt handler. */
     s_ticks++;
 }
 
@@ -51,24 +51,26 @@ void init_timer_t(struct timer_t *timer, uint32_t period) {
     timer->period = period;
 }
 
+/* NOTE: This timer function shouldn't be used for timing-critical
+    applications. The algorithm I implemented here can potentially cause
+    the timer to become out of phase over time. (Section 1)
+
+   NOTE to future me:
+    If the implementation seems pretty cryptic to you, take some time to
+    analyze what's happening. Understand that systick is a counter, and draw
+    diagrams to represent the different possibilities the timer can be in. */
 bool timer_expired(struct timer_t *timer) {
     uint32_t now = s_ticks;
     if (timer->overflow_fl == ON && now < ((uint32_t) (0xFFFFFFFF) / 2)) {
-        // less than half of uint32_max to check overflow wrap, not perfect.
-        timer->overflow_fl = OFF;
+        timer->overflow_fl = OFF;   /* Not perfect, but it'll do. */
     }
-    if (timer->overflow_fl == OFF && now > timer->expiry) {
-        // Set next expiry time
+    if (timer->overflow_fl == OFF && now > timer->expiry) { /* Set expiry */
         if ((now - timer->expiry) < timer->period) {
             timer->expiry = timer->expiry + timer->period;
         }
-        else {
-            /* As more of this happens, our timer will become more and more
-               out of phase, as our timer has missed the timing by more than
-               a period. But that's better than missing uint32_t_max ticks. */
-            timer->expiry = now + timer->period;
+        else { 
+            timer->expiry = now + timer->period;    /* Section 1 */
         }
-        // Set overflow if needed
         timer->overflow_fl = (timer->expiry < now ? ON : OFF);
         return true;
     }

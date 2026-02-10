@@ -1,10 +1,12 @@
 /* 
-    Main application logic and startup code.
+    Main application logic and peripheral initializations.
 */
 #include "peripherals/gpio.h"
 #include "peripherals/systick.h"
 #include "peripherals/usart.h"
 #include "peripherals/timer.h"
+#include "peripherals/spi.h"
+#include "device_drivers/usd_card.h"
 
 #include <stdio.h>
 #include <math.h>
@@ -19,6 +21,12 @@ int main(void) {
     /* Config USART2 for serial debug output */
     uart_init(USART2, 115200);
 
+    /* Init SPI and check initialization output */
+    spi_init();
+
+    /* TODO: Init SD card */
+    sd_card_init();
+
     /* Hook up TIM2 to PA15 (Pin 17 CN7)*/
     timer_init();
     uint16_t led = PIN('A', 15);            /* vdd pin for led */
@@ -29,7 +37,7 @@ int main(void) {
     struct timer_t timer;
     uint32_t duty_cycle = 0;
     int8_t direction = 1;   // 1 for up, 0 for down
-    init_timer_t(&timer, 100);
+    init_timer_t(&timer, 10);
     for (;;) {
         /* Timer polling */
         if(timer_expired(&timer)) {
@@ -47,9 +55,9 @@ int main(void) {
                 duty_cycle--;
             }
             timer_pwm_set_duty_cycle((float) duty_cycle);
-            printf("LED Duty Cycle: %ld, dir: %d\r\n", duty_cycle, direction);
-            printf("TIM2 COUNT: %ld, TIM2 CCR: %ld\r\n", TIM2->CNT, 
-                TIM2->CCR1);
+            //printf("LED Duty Cycle: %ld, dir: %d\r\n", duty_cycle, direction);
+            /*printf("TIM2 COUNT: %ld, TIM2 CCR: %ld\r\n", TIM2->CNT, 
+                TIM2->CCR1);*/
         }
         /* Do other work */ 
     }

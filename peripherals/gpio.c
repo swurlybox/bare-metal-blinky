@@ -1,7 +1,3 @@
-/*
-    Implementation of functions declared in gpio.h header file.
-*/
-
 #include "gpio.h"
 #include "rcc.h"
 
