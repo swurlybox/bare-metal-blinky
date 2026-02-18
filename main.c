@@ -7,12 +7,23 @@
 #include "peripherals/timer.h"
 #include "peripherals/spi.h"
 #include "device_drivers/usd_card.h"
+#include "device_drivers/fatfs_module/ff.h"
 
 #include <stdio.h>
 #include <math.h>
 
 #define CLOCK_SPEED (16000000)
 #define TICKS_PER_MILLISECOND (CLOCK_SPEED / 1000)
+#define SECTOR_SIZE (512)
+
+void print_buf(uint8_t *buf) {
+    for (int i = 0; i < SECTOR_SIZE; i++) {
+        printf("%3x ", *buf++);
+        if((i + 1) % 16 == 0) {
+            printf("\r\n");
+        }
+    }
+}
 
 int main(void) {
     /* Config SysTick, generate interrupt every ms, needed for delay */
@@ -24,7 +35,7 @@ int main(void) {
     /* Init SPI and check initialization output */
     spi_init();
 
-    /* TODO: Init SD card */
+    /* Init SD card */
     sd_card_init();
 
     /* Hook up TIM2 to PA15 (Pin 17 CN7)*/

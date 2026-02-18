@@ -1,0 +1,12 @@
+Required MAI functions to implement to integrate FatFs:
+
+disk_status
+disk_initialize
+disk_read
+disk_write
+get_fattime
+disk_ioctl (CTRL_SYNC)
+
+include ffunicode.c, probably don't need ffsystem.c (don't malloc and don't
+have os related functions.)
+
