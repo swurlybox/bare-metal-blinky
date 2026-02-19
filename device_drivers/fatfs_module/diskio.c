@@ -11,15 +11,10 @@
 #include "diskio.h"		/* Declarations FatFs MAI */
 
 /* Example: Declarations of the platform and disk functions in the project */
-/* NOTE: This needs to be changed to our microsd header files. */
-// #include "platform.h"
-// #include "storage.h"
+#include "../usd_card.h"
 
 /* Example: Mapping of physical drive number for each drive */
 #define DEV_FLASH	0	/* Map FTL to physical drive 0 */
-#define DEV_MMC		1	/* Map MMC/SD card to physical drive 1 */
-#define DEV_USB		2	/* Map USB MSD to physical drive 2 */
-#define DEV_RAM     3
 
 /*-----------------------------------------------------------------------*/
 /* Get Drive Status                                                      */
@@ -31,33 +26,11 @@ DSTATUS disk_status (
 {
 	DSTATUS stat;
 	int result;
-    (void) result;
 
 	switch (pdrv) {
-	case DEV_RAM :
-		//result = RAM_disk_status();
-        stat = 1;
-		// translate the reslut code here
-
-		return stat;
-
-	case DEV_MMC :
-		//result = MMC_disk_status();
-        /* NOTE: Probably need to implement something here?
-            Inquires about the state of the targeted device.
-           
-           Sending CMD13 expects status register from SD card. Seems
-           reasonable. 
-        */
-        stat = 2;
-
-		return stat;
-
-	case DEV_USB :
-		//result = USB_disk_status();
-        stat = 3;
-		// translate the reslut code here
-
+	case DEV_FLASH :
+        result = sd_card_get_status();
+        stat = (result == SUCCESS ? 0 : STA_NOINIT);
 		return stat;
 	}
 	return STA_NOINIT;
@@ -75,27 +48,10 @@ DSTATUS disk_initialize (
 {
 	DSTATUS stat;
 	int result;
-    (void) result;
 	switch (pdrv) {
-	case DEV_RAM :
-		//result = RAM_disk_initialize();
-
-		// translate the reslut code here
-        stat = 1;
-		return stat;
-
-	case DEV_MMC :
-		//result = MMC_disk_initialize();
-        
-        /* NOTE: probably our SD card initialization function goes here */
-        stat = 2;
-		return stat;
-
-	case DEV_USB :
-		//result = USB_disk_initialize();
-
-		// translate the reslut code here
-        stat = 3;
+	case DEV_FLASH :
+        result = sd_card_init();
+        stat = (result == SUCCESS ? 0 : STA_NOINIT);
 		return stat;
 	}
 	return STA_NOINIT;
@@ -117,39 +73,11 @@ DRESULT disk_read (
 	DRESULT res;
 	int result;
 
-    (void) buff;
-    (void) sector;
-    (void) result;
-    (void) count;
-
 	switch (pdrv) {
-	case DEV_RAM :
-		// translate the arguments here
-
-		//result = RAM_disk_read(buff, sector, count);
-
-		// translate the reslut code here
-        res = 1;
-		return res;
-
-	case DEV_MMC :
-		// translate the arguments here
-
-        /* NOTE: A low-level LBA_read that stores consecutive sectors of
-            data into buff. Not to be called directly, but used by the
-            filesystem layer of the FATFS module. */
-		//result = MMC_disk_read(buff, sector, count);
-        /* NOTE: based on the result, change res into some useful value. */
-        res = 2;
-		return res;
-
-	case DEV_USB :
-		// translate the arguments here
-
-		//result = USB_disk_read(buff, sector, count);
-
-		// translate the reslut code here
-        res = 3;
+	case DEV_FLASH :
+        /* NOTE: may have type issues here */
+        result = sd_card_multi_read(sector, buff, count);
+        res = (result == SUCCESS ? RES_OK : RES_ERROR); 
 		return res;
 	}
 
@@ -173,38 +101,12 @@ DRESULT disk_write (
 {
 	DRESULT res;
 	int result;
-    (void) result;
-    (void) buff;
-    (void) sector;
-    (void) count;
 
 	switch (pdrv) {
-	case DEV_RAM :
-		// translate the arguments here
-
-		//result = RAM_disk_write(buff, sector, count);
-
-		// translate the reslut code here
-        res = 1;
-		return res;
-
-	case DEV_MMC :
-		// translate the arguments here
-
-		//result = MMC_disk_write(buff, sector, count);
-
-		// translate the reslut code here
-        res = 2;
-		return res;
-
-	case DEV_USB :
-		// translate the arguments here
-
-		//result = USB_disk_write(buff, sector, count);
-
-		// translate the reslut code here
-        res = 3;
-		return res;
+	case DEV_FLASH :
+        result = sd_card_multi_write(sector, buff, count);
+		res = (result == SUCCESS ? RES_OK : RES_ERROR);
+        return res;
 	}
 
 	return RES_PARERR;
@@ -216,6 +118,8 @@ DRESULT disk_write (
 /*-----------------------------------------------------------------------*/
 /* Miscellaneous Functions                                               */
 /*-----------------------------------------------------------------------*/
+
+/* NOTE: We don't use this. */
 
 DRESULT disk_ioctl (
 	BYTE pdrv,		/* Physical drive nmuber (0..) */
@@ -232,26 +136,13 @@ DRESULT disk_ioctl (
 
 
 	switch (pdrv) {
-	case DEV_RAM :
+	case DEV_FLASH :
 
 		// Process of the command for the RAM drive
-        res = 1;
+        res = 0;
 		return res;
 
-	case DEV_MMC :
-
-		// Process of the command for the MMC/SD card
-        /* NOTE: probably intended to configure the device somehow
-            based on a user-defined control code. */
-        res = 2;
-		return res;
-
-	case DEV_USB :
-
-		// Process of the command the USB drive
-        res = 3;
-		return res;
-	}
+    }
 
 	return RES_PARERR;
 }

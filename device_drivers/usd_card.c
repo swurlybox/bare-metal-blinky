@@ -9,8 +9,6 @@
 #define NOARGS  (0)
 #define NOCRC   (0)
 #define CHECK_PATTERN   (0xAA)
-#define SUCCESS (0U)
-#define FAIL    (1U)
 #define SECTOR_SIZE (512)
 #define DATA_START_TOKEN    ((uint8_t) 0xFC)
 #define STOP_TRANS_TOKEN    ((uint8_t) 0xFD)
@@ -73,7 +71,7 @@ static void send_cmd(cmd_t *cmd) {
     uint8_t *ptr = cmd->arr;
     for(int i = 0; i < 6; i++, ptr++) {
         spi_transfer(*ptr);
-        #if DEV_ENV
+        #ifdef DEV_ENV
         printf("CMD Byte %d: %x\r\n", i, *ptr);
         #endif
     }
@@ -81,7 +79,7 @@ static void send_cmd(cmd_t *cmd) {
 
 static void send_byte(uint8_t byte) {
     spi_transfer(byte);
-    #if DEV_ENV
+    #ifdef DEV_ENV
     printf("Byte Sent: %x\r\n", byte);
     #endif    
 }
@@ -90,7 +88,7 @@ static void receive_r1(r1_t *response) {
     while ((response->arr[0] = spi_transfer((uint8_t) 0xFF)) == 0xFF) {
         (void) 0;
     }
-    #if DEV_ENV
+    #ifdef DEV_ENV
     printf("R1 Byte 0: %x\r\n", response->arr[0]);
     #endif
 }
@@ -100,7 +98,7 @@ static void receive_r2(r2_t *response) {
         (void) 0;
     }
     response->arr[1] = spi_transfer((uint8_t) 0xFF);
-    #if DEV_ENV
+    #ifdef DEV_ENV
     for (int i = 0; i < 2; i++) {
         printf("R2 Byte %d: %x\r\n", i, response->arr[i]);
     }
@@ -114,7 +112,7 @@ static void receive_r7(r7_t *response) {
     for (int i = 1; i < 5; i++) {
         response->arr[i] = spi_transfer((uint8_t) 0xFF);
     }
-    #if DEV_ENV
+    #ifdef DEV_ENV
     for (int i = 0; i < 5; i++) {
         printf("R7 Byte %d: %x\r\n", i, response->arr[i]);
     }
@@ -123,7 +121,7 @@ static void receive_r7(r7_t *response) {
 
 static void receive_byte(r1_t *response) {
     response->arr[0] = spi_transfer((uint8_t) 0xFF);
-    #if DEV_ENV
+    #ifdef DEV_ENV
     printf("Byte Received: %x\r\n", response->arr[0]);
     #endif
 }
@@ -228,10 +226,11 @@ static uint8_t sd_card_spi_initialize(void) {
 }
 
 /* Public-facing microSD card API: usd_card.h */
-void sd_card_init() {
+uint8_t sd_card_init() {
     sd_card_power_on();
-    if (sd_card_enter_spi() == FAIL) { return; } 
-    if (sd_card_spi_initialize() == FAIL) { return; }
+    if (sd_card_enter_spi() == FAIL) { return FAIL; } 
+    if (sd_card_spi_initialize() == FAIL) { return FAIL; }
+    return SUCCESS;
 };
 
 uint8_t sd_card_get_status(void) {
@@ -246,7 +245,9 @@ uint8_t sd_card_get_status(void) {
         printf("SD card status has an error bit set\r\n");
         return FAIL;
     }
+    #ifdef DEV_ENV
     printf("SD card status good\r\n");
+    #endif
     return SUCCESS;
 }
 
@@ -298,7 +299,8 @@ uint8_t sd_card_multi_read(uint32_t LBA, uint8_t *srcbuf, uint32_t sec_cnt) {
     return SUCCESS;
 }
 
-uint8_t sd_card_multi_write(uint32_t LBA, uint8_t *databuf, uint32_t sec_cnt) {
+uint8_t sd_card_multi_write(uint32_t LBA, const uint8_t *databuf,
+                             uint32_t sec_cnt) {
     cmd_t CMD = {0};
     r1_t RES1 = {0};
 

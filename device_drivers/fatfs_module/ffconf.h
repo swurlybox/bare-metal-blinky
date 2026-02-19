@@ -158,7 +158,7 @@
 
 /* NOTE: maybe enable relative pathing and getcwd? The end goal will be
     an interactive file system. */
-#define FF_FS_RPATH		0
+#define FF_FS_RPATH		2
 /* This option configures support for relative path feature.
 /
 /   0: Disable relative path and remove related API functions.
@@ -253,8 +253,9 @@
 /  To enable exFAT, also LFN needs to be enabled. (FF_USE_LFN >= 1)
 /  Note that enabling exFAT discards ANSI C (C89) compatibility. */
 
-
-#define FF_FS_NORTC		0
+/* NOTE: STM32 does have an RTC, but we're not going to bother for now :)
+        Set this to 0 when we get around to interacting with the RTC periph */
+#define FF_FS_NORTC		1
 #define FF_NORTC_MON	1
 #define FF_NORTC_MDAY	1
 #define FF_NORTC_YEAR	2025

@@ -23,7 +23,8 @@ LDFLAGS ?=  -T$(LDSCRIPT_LOC) -nostartfiles -nostdlib --specs nano.specs -lc \
 # Compile all c files found in our project
 SOURCES =   $(shell find . -name "*.c")
 LIBS    =   -lm
-MACROS  =   -DDEV_ENV
+# Include -DDEV_ENV to enable certain printf debug outputs
+MACROS  =
 
 build: firmware.elf
 

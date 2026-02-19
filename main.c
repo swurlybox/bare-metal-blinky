@@ -15,6 +15,37 @@
 #define CLOCK_SPEED (16000000)
 #define TICKS_PER_MILLISECOND (CLOCK_SPEED / 1000)
 #define SECTOR_SIZE (512)
+#define CWD_MAX_LEN (512)
+
+/* List contents of a directory : Copied from elm chaN */
+FRESULT list_dir (const char *path)
+{
+    FRESULT res;
+    DIR dir;
+    FILINFO fno;
+    int nfile, ndir;
+
+    res = f_opendir(&dir, path);                   /* Open the directory */
+    if (res == FR_OK) {
+        nfile = ndir = 0;
+        for (;;) {
+            res = f_readdir(&dir, &fno);           /* Read a directory item */
+            if (fno.fname[0] == 0) break;          /* Error or end of dir */
+            if (fno.fattrib & AM_DIR) {            /* It is a directory */
+                printf("   <DIR>   %s\r\n", fno.fname);
+                ndir++;
+            } else {                               /* It is a file */
+                printf("%10lu %s\r\n", fno.fsize, fno.fname);
+                nfile++;
+            }
+        }
+        f_closedir(&dir);
+        printf("%d dirs, %d files.\r\n", ndir, nfile);
+    } else {
+        printf("Failed to open \"%s\". (%u)\r\n", path, res);
+    }
+    return res;
+}
 
 void print_buf(uint8_t *buf) {
     for (int i = 0; i < SECTOR_SIZE; i++) {
@@ -36,7 +67,7 @@ int main(void) {
     spi_init();
 
     /* Init SD card */
-    sd_card_init();
+    sdcard_init();
 
     /* Hook up TIM2 to PA15 (Pin 17 CN7)*/
     timer_init();

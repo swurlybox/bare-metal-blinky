@@ -4,9 +4,12 @@
 #ifndef USD_CARD_H
 #define USD_CARD_H
 
+#define SUCCESS (0U)
+#define FAIL    (1U)
+
 #include <stdint.h>
 
-void sd_card_init(void);
+uint8_t sd_card_init(void);
 
 /* TODO: Generic read write operations that I think might be useful? 
     Should only ever do multi-writes/reads as single-write transactions
@@ -16,7 +19,8 @@ void sd_card_init(void);
 // NOTE: See CMD13, returns SSR register
 uint8_t sd_card_get_status(void);
 // NOTE: SEE CMD25
-uint8_t sd_card_multi_write(uint32_t LBA, uint8_t *databuf, uint32_t sec_cnt);
+uint8_t sd_card_multi_write(uint32_t LBA, const uint8_t *databuf,
+                             uint32_t sec_cnt);
 // NOTE: SEE CMD18
 uint8_t sd_card_multi_read(uint32_t LBA, uint8_t *srcbuf, uint32_t sec_cnt);
 
