@@ -29,7 +29,6 @@ off on my resume.
 - STM32F446RE Nucleo Board
 - microSD card reader w/ SPI interface module
 - 4GB (SDHC) microSD card
-
 - red LED
 - usbA to miniB cable
 - breadboard

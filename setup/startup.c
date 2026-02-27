@@ -23,9 +23,13 @@ __attribute__((naked, noreturn)) void _reset(void) {
 
 extern void _estack(void);          // Defined in link.ld
 extern void SysTick_Handler(void);  // Defined in systick.c
+extern void EXTI0_Handler(void);    // Mapped to a test button.
 
-// 16 standard and 96 STM32F446RE-specific handlers
+
+// 16 standard and 96 STM32F446RE-specific handlers.
 __attribute__((section(".vectors"))) void (*const tab[16 + 96])(void) = {
-    _estack, _reset, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, SysTick_Handler
+    _estack, _reset, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, SysTick_Handler,
+    0, 0, 0, 0, 0, 0, EXTI0_Handler, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0
 };
 

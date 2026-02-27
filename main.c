@@ -6,101 +6,108 @@
 #include "peripherals/usart.h"
 #include "peripherals/timer.h"
 #include "peripherals/spi.h"
+#include "peripherals/syscfg.h"
+#include "peripherals/exti.h"
+
 #include "device_drivers/usd_card.h"
 #include "device_drivers/fatfs_module/ff.h"
+
+#include "setup/nvic.h"
 
 #include <stdio.h>
 #include <math.h>
 
+#define EXTI0_INTERRUPT_NO  (6)
 #define CLOCK_SPEED (16000000)
 #define TICKS_PER_MILLISECOND (CLOCK_SPEED / 1000)
 #define SECTOR_SIZE (512)
 #define CWD_MAX_LEN (512)
+#define LAZYMOUNT   (0)
 
-/* List contents of a directory : Copied from elm chaN */
-FRESULT list_dir (const char *path)
-{
-    FRESULT res;
-    DIR dir;
-    FILINFO fno;
-    int nfile, ndir;
+#define DOWN    (0)
+#define UP      (1)
 
-    res = f_opendir(&dir, path);                   /* Open the directory */
-    if (res == FR_OK) {
-        nfile = ndir = 0;
-        for (;;) {
-            res = f_readdir(&dir, &fno);           /* Read a directory item */
-            if (fno.fname[0] == 0) break;          /* Error or end of dir */
-            if (fno.fattrib & AM_DIR) {            /* It is a directory */
-                printf("   <DIR>   %s\r\n", fno.fname);
-                ndir++;
-            } else {                               /* It is a file */
-                printf("%10lu %s\r\n", fno.fsize, fno.fname);
-                nfile++;
-            }
-        }
-        f_closedir(&dir);
-        printf("%d dirs, %d files.\r\n", ndir, nfile);
-    } else {
-        printf("Failed to open \"%s\". (%u)\r\n", path, res);
-    }
-    return res;
-}
+FATFS fs;
 
-void print_buf(uint8_t *buf) {
-    for (int i = 0; i < SECTOR_SIZE; i++) {
-        printf("%3x ", *buf++);
-        if((i + 1) % 16 == 0) {
-            printf("\r\n");
-        }
-    }
+void system_init(void) {
+    systick_init(TICKS_PER_MILLISECOND); 
+    uart_init(USART2, 115200);      /* sent to PC terminal */
+    spi_init();                     
+    f_mount(&fs, "", LAZYMOUNT);    /* mount sd_card filesystem */
+  
+    /* setup external interrupts for user_input */ 
+    syscfg_init();
+    
+    /* setup external interrupt on test button. */
+    uint16_t test_button = PIN('A', 0);
+    gpio_set_mode(test_button, GPIO_MODE_INPUT);
+    exti_enable(test_button, FALLING_EDGE | RISING_EDGE);
+
+    /* TODO: Enable IRQ */
+    nvic_status();
+    enable_irq(EXTI0_INTERRUPT_NO);       /* EXTI0 is interrupt no. 6*/
+
+    /* Status LED: TIM2 on PA15 (Pin 17 CN7) */
+    timer_init();
+    uint16_t led = PIN('A', 15);
+    gpio_set_mode(led, GPIO_MODE_AF);
+    gpio_set_af(led, 1);
 }
 
 int main(void) {
-    /* Config SysTick, generate interrupt every ms, needed for delay */
-    systick_init(TICKS_PER_MILLISECOND); 
+    system_init(); 
 
-    /* Config USART2 for serial debug output */
-    uart_init(USART2, 115200);
-
-    /* Init SPI and check initialization output */
-    spi_init();
-
-    /* Init SD card */
-    sdcard_init();
-
-    /* Hook up TIM2 to PA15 (Pin 17 CN7)*/
-    timer_init();
-    uint16_t led = PIN('A', 15);            /* vdd pin for led */
-    gpio_set_mode(led, GPIO_MODE_AF);       /* set pin for output */
-    gpio_set_af(led, 1);                    /* enable TIM2 for A15 */ 
-    
-    /* Fade in and out */
     struct timer_t timer;
     uint32_t duty_cycle = 0;
-    int8_t direction = 1;   // 1 for up, 0 for down
-    init_timer_t(&timer, 10);
+    int8_t direction = UP;
+    init_timer_t(&timer, 10);   /* create periodic timer */
     for (;;) {
-        /* Timer polling */
+        /* STATUS LED: Fade in and out */
         if(timer_expired(&timer)) {
-            /* We want fade in and out behaviour. */
             if (duty_cycle >= 100) {
-                direction = 0;
+                direction = DOWN;
             }
             if (duty_cycle == 0) {
-                direction = 1;
+                direction = UP;
             }
-            if (direction == 1) {
+
+            if (direction == UP) {
                 duty_cycle++;
             }
-            if (direction == 0) {
+            if (direction == DOWN) {
                 duty_cycle--;
             }
-            timer_pwm_set_duty_cycle((float) duty_cycle);
-            //printf("LED Duty Cycle: %ld, dir: %d\r\n", duty_cycle, direction);
-            /*printf("TIM2 COUNT: %ld, TIM2 CCR: %ld\r\n", TIM2->CNT, 
-                TIM2->CCR1);*/
+            timer_pwm_set_duty_cycle((float) duty_cycle); 
         }
+
+        /* NOTE: PA0 for first button interrupt test. CN8 Pin 1 
+
+            9-5 and 15-10 are grouped interrupt lines that map to one
+            handler. It's a bit annoying to untangle it and determine the
+            source of the interrupt. So I'll stick with the single interrupt
+            -per-pin lines.
+        */
+        
+
+
+
+
+        /* Poll for button press event, or use a pure interrupt to manage
+            filesystem navigation state. 
+
+           Button press will trigger an interrupt, setting a global shared
+           button_pressed variable. If the button_pressed variable hasn't
+           been cleared, that means the button press hasn't been handled yet.
+           Subsequent button press interrupts will have no effect on the
+           button_pressed variable until it has been handled and cleared.
+           
+           To deal with the possibility of debouncing, we check for a
+           consistent signal for a period of time after the button_press
+           event, then set the button_press variable. */
+
+        /* However, start with getting a simple button interrupt working. */
+
+
         /* Do other work */ 
     }
     return 0;
