@@ -12,6 +12,8 @@
 #include "device_drivers/usd_card.h"
 #include "device_drivers/fatfs_module/ff.h"
 
+#include "user_input/buttons.h"
+
 #include "setup/nvic.h"
 
 #include <stdio.h>
@@ -41,11 +43,15 @@ void system_init(void) {
     /* setup external interrupt on test button. */
     uint16_t test_button = PIN('A', 0);
     gpio_set_mode(test_button, GPIO_MODE_INPUT);
+    //gpio_set_pupd(test_button, GPIO_PU);
     exti_enable(test_button, FALLING_EDGE | RISING_EDGE);
 
     /* TODO: Enable IRQ */
     nvic_status();
     enable_irq(EXTI0_INTERRUPT_NO);       /* EXTI0 is interrupt no. 6*/
+
+    /* set up periodic timers on buttons. */
+    init_buttons();
 
     /* Status LED: TIM2 on PA15 (Pin 17 CN7) */
     timer_init();
@@ -79,6 +85,8 @@ int main(void) {
             }
             timer_pwm_set_duty_cycle((float) duty_cycle); 
         }
+
+        debounce_buttons();
 
         /* NOTE: PA0 for first button interrupt test. CN8 Pin 1 
 

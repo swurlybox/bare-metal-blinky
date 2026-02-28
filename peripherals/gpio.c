@@ -26,6 +26,13 @@ void gpio_bank_disable(uint8_t bank) {
     (bank <= 7) ? RCC->AHB1ENR &= ~(BIT(bank)) : (void) 0;
 }
 
+/* NOTE: Fresh implementation. */
+uint8_t gpio_read(uint16_t pin) {
+    struct gpio *gpio = GPIO(PINBANK(pin));
+    uint8_t n = (uint8_t) PINNO(pin);
+    return (uint8_t) ((gpio->IDR & (1U << n)) >> n);
+}
+
 void gpio_write(uint16_t pin, bool val) {
     struct gpio *gpio = GPIO(PINBANK(pin));
     gpio->BSRR = (1U << PINNO(pin)) << (val ? 0 : 16);
