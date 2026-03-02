@@ -1,0 +1,26 @@
+USART2:
+    Already configured to redirect to PC via USB. No Jumpers needed.
+    PA2:    TX
+    PA3:    RX
+
+SPI2:
+    PB12:   NSS
+    PB13:   SCK
+    PB14:   MISO
+    PB15:   MOSI
+
+I2C1:
+    PB8:    SCL
+    PB9:    SDA
+
+LED:
+    PA15:   Timer PWM Output Pin
+
+Button Inputs:
+    PA0:    UP
+    PA1:    DOWN
+    PB2:    LEFT
+    PB3:    RIGHT
+    PA4:    SELECT
+    PA5:    CANCEL  
+    

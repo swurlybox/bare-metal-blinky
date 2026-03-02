@@ -10,6 +10,8 @@
 
 #include <stdint.h>
 
+void ff_nav_main(void *);
+
 /*  Lists the files in the current working directory.
     Prints the contents to some sort of user interface (pos. dep. injection)
     Returns the count of items in the directory.

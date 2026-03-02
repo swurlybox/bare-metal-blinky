@@ -12,6 +12,13 @@ void gpio_set_mode(uint16_t pin, uint8_t mode) {
     gpio->MODER |= (mode & 3) << (n * 2);
 }
 
+void gpio_set_pupd(uint16_t pin, uint8_t mode) {
+    struct gpio *gpio = GPIO(PINBANK(pin));
+    uint8_t n = (uint8_t) PINNO(pin);
+    gpio->PUPDR &= ~(3U << (n * 2));
+    gpio->PUPDR |= (mode & 3) << (n * 2);
+}
+
 void gpio_bank_enable(uint8_t bank) {
     if (bank >= 'A' && bank <= 'H') {
         bank = bank - 'A';

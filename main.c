@@ -9,6 +9,9 @@
 #include "peripherals/syscfg.h"
 #include "peripherals/exti.h"
 
+#include "states/ff_nav.h"
+#include "states/gbl_ctx.h"
+
 #include "device_drivers/usd_card.h"
 #include "device_drivers/fatfs_module/ff.h"
 
@@ -19,7 +22,6 @@
 #include <stdio.h>
 #include <math.h>
 
-#define EXTI0_INTERRUPT_NO  (6)
 #define CLOCK_SPEED (16000000)
 #define TICKS_PER_MILLISECOND (CLOCK_SPEED / 1000)
 #define SECTOR_SIZE (512)
@@ -29,93 +31,76 @@
 #define DOWN    (0)
 #define UP      (1)
 
-FATFS fs;
+GBL_CTX_T ctx;
 
 void system_init(void) {
-    systick_init(TICKS_PER_MILLISECOND); 
-    uart_init(USART2, 115200);      /* sent to PC terminal */
-    spi_init();                     
-    f_mount(&fs, "", LAZYMOUNT);    /* mount sd_card filesystem */
+    systick_init(TICKS_PER_MILLISECOND);    /* systick */
+    uart_init(USART2, 115200);              /* usart */
+    spi_init();                             /* spi */
   
-    /* setup external interrupts for user_input */ 
-    syscfg_init();
-    
-    /* setup external interrupt on test button. */
-    uint16_t test_button = PIN('A', 0);
-    gpio_set_mode(test_button, GPIO_MODE_INPUT);
-    //gpio_set_pupd(test_button, GPIO_PU);
-    exti_enable(test_button, FALLING_EDGE | RISING_EDGE);
+    user_input_init();  /* Enable button interrupts, no events hooked yet. */ 
 
-    /* TODO: Enable IRQ */
-    nvic_status();
-    enable_irq(EXTI0_INTERRUPT_NO);       /* EXTI0 is interrupt no. 6*/
-
-    /* set up periodic timers on buttons. */
-    init_buttons();
-
-    /* Status LED: TIM2 on PA15 (Pin 17 CN7) */
-    timer_init();
+    /* PWM Status LED: TIM2 on PA15 (Pin 17 CN7) */
+    timer_init();                       /* TIM2 Frequency Timer */
     uint16_t led = PIN('A', 15);
     gpio_set_mode(led, GPIO_MODE_AF);
     gpio_set_af(led, 1);
+
+    /* Setup GBL_CTX (global context) object.  */ 
+    f_mount(&ctx.fs, "", LAZYMOUNT);
+    ctx.status = 1;
+    ctx.execute = ff_nav_main;  // TODO: hook to ff_nav_main() later
+}
+
+typedef struct {
+    struct timer_t timer;   /* periodic timer used to adjust duty cycle. */
+    uint8_t direction;
+    uint32_t duty_cycle;
+} STATUS_LED_T;
+
+void status_led_fade(STATUS_LED_T *led) {
+    if(timer_expired(&led->timer)) {
+        /* Set direction. */
+        if (led->duty_cycle >= 100) {
+            led->direction = DOWN;
+        }
+        if (led->duty_cycle == 0) {
+            led->direction = UP;
+        }
+
+        /* Adjust duty cycle. */
+        if (led->direction == UP) {
+            led->duty_cycle++;
+        }
+        if (led->direction == DOWN) {
+            led->duty_cycle--;
+        }
+        timer_pwm_set_duty_cycle((float) led->duty_cycle);
+    }
 }
 
 int main(void) {
-    system_init(); 
+    /* Peripheral and hardware initializations. */
+    system_init();
+    
+    /* Any other extraneous initializations. */ 
+    STATUS_LED_T status_led = {
+        .timer = {0}, 
+        .direction = UP, 
+        .duty_cycle = 0
+    };
+    init_timer_t(&status_led.timer, 10);
 
-    struct timer_t timer;
-    uint32_t duty_cycle = 0;
-    int8_t direction = UP;
-    init_timer_t(&timer, 10);   /* create periodic timer */
     for (;;) {
         /* STATUS LED: Fade in and out */
-        if(timer_expired(&timer)) {
-            if (duty_cycle >= 100) {
-                direction = DOWN;
-            }
-            if (duty_cycle == 0) {
-                direction = UP;
-            }
+        status_led_fade(&status_led); 
 
-            if (direction == UP) {
-                duty_cycle++;
-            }
-            if (direction == DOWN) {
-                duty_cycle--;
-            }
-            timer_pwm_set_duty_cycle((float) duty_cycle); 
-        }
+        /* Call ctx.execute() */
+        ctx.execute(NULL);
 
-        debounce_buttons();
+        /* NOTE: PA0 for first button interrupt test. CN7 Pin 28 */ 
 
-        /* NOTE: PA0 for first button interrupt test. CN8 Pin 1 
-
-            9-5 and 15-10 are grouped interrupt lines that map to one
-            handler. It's a bit annoying to untangle it and determine the
-            source of the interrupt. So I'll stick with the single interrupt
-            -per-pin lines.
-        */
-        
-
-
-
-
-        /* Poll for button press event, or use a pure interrupt to manage
-            filesystem navigation state. 
-
-           Button press will trigger an interrupt, setting a global shared
-           button_pressed variable. If the button_pressed variable hasn't
-           been cleared, that means the button press hasn't been handled yet.
-           Subsequent button press interrupts will have no effect on the
-           button_pressed variable until it has been handled and cleared.
-           
-           To deal with the possibility of debouncing, we check for a
-           consistent signal for a period of time after the button_press
-           event, then set the button_press variable. */
-
-        /* However, start with getting a simple button interrupt working. */
-
-
+ 
         /* Do other work */ 
     }
     return 0;
