@@ -1,3 +1,4 @@
+/* Module to include such that files are aware of the global context object. */
 #ifndef GBL_CTX_H
 #define GBL_CTX_H
 

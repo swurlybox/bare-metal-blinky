@@ -10,7 +10,15 @@ teaches me a thing or two about embedded software development on bare-metal.
 # Features
 
 - microSD card storage
-- FAT32 Filesystem Navigation
+    - mainly for storing audio files to be played, but any file can be stored
+      and made visible in the filesystem navigator.
+- Basic FAT32 Filesystem Navigation
+    - Up and Down buttons: cycle through directory contents.
+    - Select button: On a subdirectory, opens that subdirectory for viewing
+        (similar to cd). On a file, doesn't do anything special yet, but
+        if its a valid audio file (we'll stick with mp3), the system
+        will change into a media-playing state and play the audio.
+    - Cancel button: Go back to parent directory.
 
 # Notes / Considerations
 
