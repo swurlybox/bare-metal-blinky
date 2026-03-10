@@ -1,0 +1,5 @@
+st-util to start gdb server
+arm-none-eabi-gdb to connect to server, w/ the provided .elf file as info
+target remote localhost:4242
+
+

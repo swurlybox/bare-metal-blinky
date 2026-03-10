@@ -12,6 +12,13 @@ void gpio_set_mode(uint16_t pin, uint8_t mode) {
     gpio->MODER |= (mode & 3) << (n * 2);
 }
 
+void gpio_set_otype(uint16_t pin, uint8_t otype) {
+    struct gpio *gpio = GPIO(PINBANK(pin));
+    uint8_t n = (uint8_t) PINNO(pin);
+    gpio->OTYPER &= ~(1U << (n));
+    gpio->OTYPER |= (otype << (n));
+}
+
 void gpio_set_pupd(uint16_t pin, uint8_t mode) {
     struct gpio *gpio = GPIO(PINBANK(pin));
     uint8_t n = (uint8_t) PINNO(pin);

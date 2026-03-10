@@ -8,12 +8,14 @@
 #include "peripherals/spi.h"
 #include "peripherals/syscfg.h"
 #include "peripherals/exti.h"
+#include "peripherals/i2c.h"
 
 #include "states/ff_nav.h"
 #include "states/gbl_ctx.h"
 
 #include "device_drivers/usd_card.h"
 #include "device_drivers/fatfs_module/ff.h"
+#include "device_drivers/SSD1306/ssd1306_driver.h"
 
 #include "user_input/buttons.h"
 
@@ -37,7 +39,12 @@ void system_init(void) {
     systick_init(TICKS_PER_MILLISECOND);    /* systick */
     uart_init(USART2, 115200);              /* usart */
     spi_init();                             /* spi */
-  
+    i2c1_init();
+
+    /* check display is working */
+    display_init();
+    display_update();
+
     user_input_init();  /* Enable button interrupts, no events hooked yet. */ 
 
     /* PWM Status LED: TIM2 on PA15 (Pin 17 CN7) */

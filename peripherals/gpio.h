@@ -18,8 +18,10 @@ struct gpio {
 
 enum {GPIO_MODE_INPUT, GPIO_MODE_OUTPUT, GPIO_MODE_AF, GPIO_MODE_ANALOG};
 enum {GPIO_NOPUPD, GPIO_PU, GPIO_PD};
+enum {GPIO_OTYPE_PP, GPIO_OTYPE_OD};
 
 void gpio_set_mode(uint16_t pin, uint8_t mode);
+void gpio_set_otype(uint16_t pin, uint8_t otype);
 void gpio_set_pupd(uint16_t pin, uint8_t mode);
 void gpio_bank_enable(uint8_t bank);
 void gpio_bank_disable(uint8_t bank);
