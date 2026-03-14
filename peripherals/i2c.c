@@ -69,7 +69,7 @@ void i2c1_transmit(uint8_t address, uint8_t *data, uint32_t buf_size) {
     /* NOTE: data transfer here, behavior changes w/ DMA enabled. */
     /* send data bytes until buf_size exhausted */
     while(buf_size-- > 0) {
-       i2c1_write(*data++);
+       i2c1_write(*data++); 
        while(!(I2C1->SR1 & BIT(7))) { (void) 0; }   /* wait for TxE = 1 */
     }
     while(!(I2C1->SR1 & BIT(2))) { (void) 0; }  /* wait for BTF = 1 */

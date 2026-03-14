@@ -1,15 +1,20 @@
 #include "ssd1306_driver.h"
 #include "peripherals/i2c.h"
+#include "graphics_lib.h"
+#include "peripherals/systick.h"
 
-#define DISPLAY_I2C_ADDR (0x3C)
 #define BIT(x) (1U << (x))
 
-uint8_t display_buf[DISPLAY_BYTE_SIZE];  /* 8 for the control byte */
+uint8_t display_buf[DISPLAY_BYTE_SIZE];;  /* 8 for the control byte */
 
 void display_update() {
     /* TEST: Write some pixels on the screen */
     display_buf[0] = 0x40;      /* data bytes only */
-    display_buf[512] = 0xFF;
+    graphics_draw_chars("abcdefghijklmnopqrstuvwxyz"
+    " ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    " !?.,'\"@$%^");
+
+
     i2c1_transmit(DISPLAY_I2C_ADDR, display_buf, DISPLAY_BYTE_SIZE);
 }
 
@@ -17,11 +22,8 @@ void display_init() {
     uint8_t buflen = 4;
     uint8_t data[buflen];
 
-    /* go through software initialization flow */
-    /* NOTE: kind of ass cuz its hardcoded, but meh. See SSD1306 datasheet */
-
-    /* Commands usually have a control byte (0x00), then follows the actual
-        command or data byte.  */
+    /* 100ms delay to give display ample time to ramp up voltage. */
+    delay(100);
 
     /* SET MUX RATIO */
     data[0] = 0x80;      /* command and no continuation. */
@@ -51,12 +53,13 @@ void display_init() {
     i2c1_transmit(DISPLAY_I2C_ADDR, data, 2);
 
     /* SET COM OUTPUT SCAN DIRECTION */
-    data[1] = 0xC0;
+    data[1] = 0xC0;     /* C0/C8*/
     i2c1_transmit(DISPLAY_I2C_ADDR, data, 2);
 
     /* SET COM PINS HW CONFIGS */
     data[1] = 0xDA;
-    data[3] = 0x02;
+    data[3] = 0x12;     /* apparently alternating fixes it? but the datasheet's
+                            diagram and the actual result has a discrepancy. */
     i2c1_transmit(DISPLAY_I2C_ADDR, data, 4);
 
     /* SET CONTRAST CONTROL */
