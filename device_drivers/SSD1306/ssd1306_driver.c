@@ -8,12 +8,23 @@
 uint8_t display_buf[DISPLAY_BYTE_SIZE];;  /* 8 for the control byte */
 
 void display_update() {
-    /* TEST: Write some pixels on the screen */
     display_buf[0] = 0x40;      /* data bytes only */
+
+    /* TEST: just for testing pixels ons creen, normal update would just
+        write the contents of the buffer to i2c. */ 
     graphics_draw_chars("abcdefghijklmnopqrstuvwxyz"
     " ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-    " !?.,'\"@$%^");
+    " !?.,'\"/:@$%^");
+    graphics_clear();
+    graphics_draw_line_chars("Hello World", 5, 5); // should work
+    graphics_draw_line_chars("CWD: /home/swurlybox", 40, 0); // should work
+    graphics_draw_line_chars("garbage", 130, 28);  /* should fail, row 28*/ 
 
+    /* row, start, len */
+    graphics_draw_horizontal_line(0, 0, 150);   // should work
+    graphics_draw_horizontal_line(9, 0, 150);   // fail, row = 9
+    graphics_draw_horizontal_line(2, 150, 0);   // fail, invalid start
+    graphics_draw_horizontal_line(5, 0, (25) + 4); // should underline hello
 
     i2c1_transmit(DISPLAY_I2C_ADDR, display_buf, DISPLAY_BYTE_SIZE);
 }
