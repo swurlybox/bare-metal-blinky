@@ -10,7 +10,7 @@ extern uint8_t display_buf[DISPLAY_BYTE_SIZE];
 static uint32_t dbi = 1; /* first byte is reserved */
 
 #define CHAR_BYTE_LEN   (5)
-#define SUPPORTED_CHARS (36)
+#define SUPPORTED_CHARS (47)
 
 /* display characteristics */
 #define MAX_ROWS        (7U)
@@ -25,7 +25,10 @@ static uint32_t dbi = 1; /* first byte is reserved */
 #define DQUOT_LOC       (32)
 #define FSLASH_LOC      (33)
 #define COLON_LOC       (34)
-#define UNSUPPORTED     (35)
+#define ZERO_LOC        (35)
+#define UNDERSCORE_LOC  (45)
+
+#define UNSUPPORTED     (46)
 
 typedef struct {
     uint8_t byte[CHAR_BYTE_LEN];
@@ -75,15 +78,18 @@ void graphics_draw_horizontal_line(uint8_t row, uint8_t start, uint8_t len) {
 
 }
 
-void graphics_draw_line_chars(char *str, uint8_t buflen, uint8_t row) {
+void graphics_draw_line_chars(
+    char *str, uint8_t row, uint8_t start, uint8_t buflen) 
+{
+
     char c;
     int char_index;
 
     /* only 8 rows on our display */
-    if (row > MAX_ROWS) {
+    if (row > MAX_ROWS || start > PIXELS_PER_ROW) {
         return;
     }
-    dbi = (row * PIXELS_PER_ROW) + 1;
+    dbi = (row * PIXELS_PER_ROW) + start + 1;
     
     while (((c = *str) != '\0') && buflen-- > 0) {
         char_index = find_index(c);
@@ -135,6 +141,9 @@ static int find_index(char c) {
     else if ((c >= 'a' && c <= 'z')) {
         char_index = c - 'a';
     }
+    else if ((c >= '0' && c <= '9')) {
+        char_index = ZERO_LOC + (c - '0');
+    }
     else if ((c == '.')) {
         char_index = PERIOD_LOC;
     }
@@ -162,6 +171,9 @@ static int find_index(char c) {
     else if ((c == ':')) {
         char_index = COLON_LOC;
     }
+    else if ((c == '_')) {
+        char_index = UNDERSCORE_LOC;
+    }
     return char_index;
 }
 
@@ -174,6 +186,6 @@ static uint8_t near_edge_check() {
 
 static void draw_char(int index) {
     for (int i = 0; i < CHAR_BYTE_LEN && dbi < DISPLAY_BYTE_SIZE; i++) {    
-        display_buf[dbi++] = arr[index].byte[i];
+        display_buf[dbi++] |= arr[index].byte[i];
     }   
 }

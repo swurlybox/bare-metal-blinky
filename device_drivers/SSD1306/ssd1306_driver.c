@@ -7,25 +7,32 @@
 
 uint8_t display_buf[DISPLAY_BYTE_SIZE];;  /* 8 for the control byte */
 
+#define FILETYPE_PX_OFFSET (7)
+#define FILENAME_PX_OFFSET (19)
+
 void display_update() {
     display_buf[0] = 0x40;      /* data bytes only */
 
     /* TEST: just for testing pixels ons creen, normal update would just
         write the contents of the buffer to i2c. */ 
+    /* may also want to support underscore */
     graphics_draw_chars("abcdefghijklmnopqrstuvwxyz"
     " ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-    " !?.,'\"/:@$%^");
+    " !?.,'\"/:0123456789_@");
+    
     graphics_clear();
-    graphics_draw_line_chars("Hello World", 5, 5); // should work
-    graphics_draw_line_chars("CWD: /home/swurlybox", 40, 0); // should work
-    graphics_draw_line_chars("garbage", 130, 28);  /* should fail, row 28*/ 
-
-    /* row, start, len */
-    graphics_draw_horizontal_line(0, 0, 150);   // should work
-    graphics_draw_horizontal_line(9, 0, 150);   // fail, row = 9
-    graphics_draw_horizontal_line(2, 150, 0);   // fail, invalid start
-    graphics_draw_horizontal_line(5, 0, (25) + 4); // should underline hello
-
+    graphics_draw_line_chars("CWD: myMemeFolder", 0, 0, 30);
+    graphics_draw_horizontal_line(0, 0, 200);
+    for (uint8_t i = 1; i <= 7; i++) {
+        graphics_draw_line_chars("F", i, FILETYPE_PX_OFFSET, 30);
+        graphics_draw_horizontal_line(i, 0, 200);
+    }
+    graphics_draw_line_chars("a really long file", 1, FILENAME_PX_OFFSET, 30); 
+    graphics_draw_line_chars("short", 2, FILENAME_PX_OFFSET, 30);
+    graphics_draw_line_chars("music.mp3", 3, FILENAME_PX_OFFSET, 30);
+    graphics_draw_line_chars("hidden_figures.mv", 4, FILENAME_PX_OFFSET, 30);
+    graphics_draw_line_chars("hi :D", 5, FILENAME_PX_OFFSET, 30);
+   
     i2c1_transmit(DISPLAY_I2C_ADDR, display_buf, DISPLAY_BYTE_SIZE);
 }
 
