@@ -10,11 +10,12 @@ extern uint8_t display_buf[DISPLAY_BYTE_SIZE];
 static uint32_t dbi = 1; /* first byte is reserved */
 
 #define CHAR_BYTE_LEN   (5)
-#define SUPPORTED_CHARS (47)
+#define SUPPORTED_CHARS (48)
 
 /* display characteristics */
 #define MAX_ROWS        (7U)
 #define PIXELS_PER_ROW  (128U)
+#define PIXELS_PER_COL  (64U)
 
 #define PERIOD_LOC      (26)
 #define SPACE_LOC       (27)
@@ -27,8 +28,9 @@ static uint32_t dbi = 1; /* first byte is reserved */
 #define COLON_LOC       (34)
 #define ZERO_LOC        (35)
 #define UNDERSCORE_LOC  (45)
+#define RIGHT_ARR_LOC   (46)
 
-#define UNSUPPORTED     (46)
+#define UNSUPPORTED     (47)
 
 typedef struct {
     uint8_t byte[CHAR_BYTE_LEN];
@@ -49,6 +51,44 @@ static void draw_char(int index);   /* draws at current dbi index*/
 void graphics_clear() {
     for (int i = 1; i < DISPLAY_BYTE_SIZE; i++) {
         display_buf[i] = 0;
+    }
+}
+
+/* TEST: */
+/* col is 0-based, start is 0-based. start & len are px granular */
+void graphics_draw_vertical_dotted_line(
+    uint8_t col, uint8_t start, uint8_t len)
+{
+    /* input check */
+    if (col >= PIXELS_PER_ROW || start >= PIXELS_PER_COL) {
+        return;
+    }
+
+    /* calculate where dbi should be based on col and start. */
+    dbi = (((start >> 3U) * PIXELS_PER_ROW) + col + 1);
+
+    /* top down is lsb to msb. */
+    uint8_t bit = 0x01 << (start % 8);
+    uint8_t alternator = 1;
+    /* draw the first pixel, then alternate for every other pixel */
+    while (len-- > 0 && dbi < DISPLAY_BYTE_SIZE) {
+        /* every addressable byte spans 8 bits in a column.
+            work with these 8 bits before moving on to the next
+            byte down. */
+        if (alternator) {
+            display_buf[dbi] |= bit;
+        }
+
+        if ((bit) == 0x80U) {
+            /* very last bit, prepare to move dbi down a byte.
+                in next iteration. */
+            bit = 0x01U;
+            dbi += PIXELS_PER_ROW;   
+        }
+        else {
+            bit = bit << 1U;
+        }
+        alternator = !alternator;
     }
 }
 
@@ -173,6 +213,9 @@ static int find_index(char c) {
     }
     else if ((c == '_')) {
         char_index = UNDERSCORE_LOC;
+    }
+    else if ((c == '>')) {
+        char_index = RIGHT_ARR_LOC;
     }
     return char_index;
 }
