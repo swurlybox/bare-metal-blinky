@@ -11,6 +11,7 @@
 #include "peripherals/i2c.h"
 
 #include "states/ff_nav.h"
+#include "states/audio_playback.h"
 #include "states/gbl_ctx.h"
 
 #include "device_drivers/usd_card.h"
@@ -41,22 +42,25 @@ void system_init(void) {
     spi_init();                             /* spi */
     i2c1_init();
 
-    /* check display is working */
+    /* NOTE: uncomment this if using display; check display is working */
     display_init();
     display_update();
 
     user_input_init();  /* Enable button interrupts, no events hooked yet. */ 
 
     /* PWM Status LED: TIM2 on PA15 (Pin 17 CN7) */
-    timer_init();                       /* TIM2 Frequency Timer */
-    uint16_t led = PIN('A', 15);
-    gpio_set_mode(led, GPIO_MODE_AF);
-    gpio_set_af(led, 1);
+    //timer_init();                       /* TIM2 Frequency Timer */
+    //uint16_t led = PIN('A', 15);
+    //gpio_set_mode(led, GPIO_MODE_AF);
+    //gpio_set_af(led, 1);
 
     /* Setup GBL_CTX (global context) object.  */ 
     f_mount(&ctx.fs, "", LAZYMOUNT);
     ctx.status = 1;
-    ctx.execute = ff_nav_main;  // TODO: hook to ff_nav_main() later
+
+    /* NOTE: intended to hook to ff_nav_main, but may change it to test
+        other states. */
+    ctx.execute = audio_playback_main;  // TODO: hook to ff_nav_main() later
 }
 
 typedef struct {
@@ -64,6 +68,14 @@ typedef struct {
     uint8_t direction;
     uint32_t duty_cycle;
 } STATUS_LED_T;
+
+void status_led_blink(uint16_t led, struct timer_t *timer) {
+    static int on = 1;
+    if (timer_expired(timer)) {
+            gpio_write(led, on);
+            on = !on;
+    }
+}
 
 void status_led_fade(STATUS_LED_T *led) {
     if(timer_expired(&led->timer)) {
@@ -91,16 +103,20 @@ int main(void) {
     system_init();
     
     /* Any other extraneous initializations. */ 
-    STATUS_LED_T status_led = {
-        .timer = {0}, 
-        .direction = UP, 
-        .duty_cycle = 0
-    };
-    init_timer_t(&status_led.timer, 10);
+    struct timer_t timer;
+    init_timer_t(&timer, 500);
+    uint16_t led = PIN('A', 6);
+    gpio_set_mode(led, GPIO_MODE_OUTPUT);
+    gpio_set_otype(led, GPIO_OTYPE_PP);
+    gpio_set_pupd(led, GPIO_PU);    
 
+    printf("Entering main loop\r\n");
     for (;;) {
+        /* STATUS LED: Blink */
+        status_led_blink(led, &timer);
+
         /* STATUS LED: Fade in and out */
-        status_led_fade(&status_led); 
+        //status_led_fade(&status_led); 
 
         /* Call ctx.execute() */
         ctx.execute(NULL);

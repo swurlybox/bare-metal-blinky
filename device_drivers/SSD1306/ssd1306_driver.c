@@ -13,31 +13,7 @@ uint8_t display_buf[DISPLAY_BYTE_SIZE];;  /* 8 for the control byte */
 void display_update() {
     display_buf[0] = 0x40;      /* data bytes only */
 
-    /*
-    graphics_draw_chars("abcdefghijklmnopqrstuvwxyz"
-    " ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-    " !?.,'\"/:0123456789_@");
-    graphics_clear();
-    graphics_draw_line_chars("CWD: myMemeFolder", 0, 0, 30);
-    graphics_draw_horizontal_line(0, 0, 200);
-    for (uint8_t i = 1; i <= 7; i++) {
-        graphics_draw_line_chars("F", i, FILETYPE_PX_OFFSET, 30);
-        graphics_draw_horizontal_line(i, 8, 200);
-    }
-    graphics_draw_line_chars(">", 3, 0, 1);
-    graphics_draw_vertical_dotted_line(
-        FILETYPE_PX_OFFSET - 4, 8, 64
-    );
-    graphics_draw_vertical_dotted_line(
-        FILENAME_PX_OFFSET - 4, 8, 64
-    );
-    graphics_draw_line_chars("a really long file", 1, FILENAME_PX_OFFSET, 30); 
-    graphics_draw_line_chars("short", 2, FILENAME_PX_OFFSET, 30);
-    graphics_draw_line_chars("music.mp3", 3, FILENAME_PX_OFFSET, 30);
-    graphics_draw_line_chars("hidden_figures.mv", 4, FILENAME_PX_OFFSET, 30);
-    graphics_draw_line_chars("hi :D", 5, FILENAME_PX_OFFSET, 30);
-    */
-
+    /* TODO: Refactor this to make use of DMA */
     i2c1_transmit(DISPLAY_I2C_ADDR, display_buf, DISPLAY_BYTE_SIZE);
 }
 

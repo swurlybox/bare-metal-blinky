@@ -251,6 +251,21 @@ uint8_t sd_card_get_status(void) {
     return SUCCESS;
 }
 
+/* NOTE: To myself, I did consider trying to use DMA somewhere in here,
+    but due to how tightly-coupled our tasks are (display and audio playback
+    depend on the sd card reads) and the importance of the sequential order
+    of our tasks, there doesn't seem to be much benefit to using DMA here. 
+
+    Like, what else could the CPU be doing while waiting for MP3 chunks
+    from storage? Not much else to be honest, one could argue the CPU
+    could be handling user inputs in the meanwhile, but that rarely happens
+    so its wasted CPU cycles, and the user-input handling probably won't
+    slow down audio playback too much. In the media-player state, button
+    inputs would either be intended to 1) pause/play, 2) volume control, 3)
+    transition back into filesystem navigation, 4) seeking. 3 of these options
+    involve interrupting audio playback, which is okay. For volume control, 
+    audio playback shouldn't be noticably interrupted, and it involves
+    setting a volume control register via i2c with the DAC. */
 uint8_t sd_card_multi_read(uint32_t LBA, uint8_t *srcbuf, uint32_t sec_cnt) {
     cmd_t CMD = {0};    // Commands
     r1_t RES1 = {0};    // R1 responses, data_start and data_error tokens
@@ -281,7 +296,7 @@ uint8_t sd_card_multi_read(uint32_t LBA, uint8_t *srcbuf, uint32_t sec_cnt) {
             return FAIL;
         }
         /* Start copying data blocks over to srcbuf. */
-        while (i++ < SECTOR_SIZE) {
+        while (i++ < SECTOR_SIZE) {    
             *srcbuf++ = spi_transfer((uint8_t) 0xFF);
         }
         /* Receive 16-bit CRC (We won't do anything w/ it though) */

@@ -37,7 +37,7 @@ typedef struct {
 } display_char;
 
 /* contains information on how to draw the supported chars to the display. */
-static display_char arr[SUPPORTED_CHARS] = {
+static const display_char arr[SUPPORTED_CHARS] = {
     #include "char_byte_map.txt"
 };
 

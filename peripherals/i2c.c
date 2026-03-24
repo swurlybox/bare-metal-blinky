@@ -67,6 +67,24 @@ void i2c1_transmit(uint8_t address, uint8_t *data, uint32_t buf_size) {
     (void) dummy_byte;      /* read of SR1 and SR2 clears ADDR */
 
     /* NOTE: data transfer here, behavior changes w/ DMA enabled. */
+    /* If we do decide to use DMA here, the code structure will change a 
+        little bit. 
+    
+        Issue a DMA request to have DMA send the display buffer contents
+        via I2C. If the DMA is currently busy handling a previous request,
+        we can probably just drop the request entirely. With the display
+        update, we're essentially writing 1024 bytes everytime.
+
+        Then we can just exit this function. And do other tasks.
+
+        When DMA request is done, an interrupt will be generated, then in that
+        interrupt we can wait for BTF and then send a stop condition.
+
+        I don't know, I think we'll hold off on DMA unless our performance
+        loss is very noticable.
+        
+        Nah fuck that mentality, we'll try DMA anyway.
+    */
     /* send data bytes until buf_size exhausted */
     while(buf_size-- > 0) {
        i2c1_write(*data++); 
