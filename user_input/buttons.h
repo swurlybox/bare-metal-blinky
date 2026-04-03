@@ -16,7 +16,6 @@ typedef struct {
     volatile uint8_t sum;       /* filters out bounce noise */ 
     uint8_t threshold;          /* threshold for consistent signal */
     struct timer_t timer;
-    /* behaviour of press and release can change by attaching functions */
     void (*press)(void *);
     void (*release)(void *);
 } BUTTON;

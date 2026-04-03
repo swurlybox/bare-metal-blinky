@@ -9,6 +9,7 @@
 #include "peripherals/syscfg.h"
 #include "peripherals/exti.h"
 #include "peripherals/i2c.h"
+#include "peripherals/rcc.h"
 
 #include "states/ff_nav.h"
 #include "states/audio_playback.h"
@@ -17,6 +18,7 @@
 #include "device_drivers/usd_card.h"
 #include "device_drivers/fatfs_module/ff.h"
 #include "device_drivers/SSD1306/ssd1306_driver.h"
+#include "device_drivers/TLV320DAC3100/tlv320dac3100_driver.h"
 
 #include "user_input/buttons.h"
 
@@ -37,29 +39,24 @@
 GBL_CTX_T ctx;
 
 void system_init(void) {
+    /* Internal peripheral initializations. */
     systick_init(TICKS_PER_MILLISECOND);    /* systick */
     uart_init(USART2, 115200);              /* usart */
     spi_init();                             /* spi */
     i2c1_init();
+    i2c3_init();    /* TEST: newly added */
+    i2s3_init();    /* initialize i2s for audio playback*/
 
-    /* NOTE: uncomment this if using display; check display is working */
+    /* External peripheral/device intiializations. */
     display_init();
     display_update();
-
     user_input_init();  /* Enable button interrupts, no events hooked yet. */ 
+    dac_init();
 
-    /* PWM Status LED: TIM2 on PA15 (Pin 17 CN7) */
-    //timer_init();                       /* TIM2 Frequency Timer */
-    //uint16_t led = PIN('A', 15);
-    //gpio_set_mode(led, GPIO_MODE_AF);
-    //gpio_set_af(led, 1);
-
-    /* Setup GBL_CTX (global context) object.  */ 
+    /* Software-side structure initializations. */
     f_mount(&ctx.fs, "", LAZYMOUNT);
-    ctx.status = 1;
+    ctx.status = 1;     /* first entry to state flag. */
 
-    /* NOTE: intended to hook to ff_nav_main, but may change it to test
-        other states. */
     ctx.execute = audio_playback_main;  // TODO: hook to ff_nav_main() later
 }
 
@@ -104,7 +101,7 @@ int main(void) {
     
     /* Any other extraneous initializations. */ 
     struct timer_t timer;
-    init_timer_t(&timer, 500);
+    init_timer_t(&timer, 1000);
     uint16_t led = PIN('A', 6);
     gpio_set_mode(led, GPIO_MODE_OUTPUT);
     gpio_set_otype(led, GPIO_OTYPE_PP);
@@ -112,19 +109,9 @@ int main(void) {
 
     printf("Entering main loop\r\n");
     for (;;) {
-        /* STATUS LED: Blink */
         status_led_blink(led, &timer);
-
-        /* STATUS LED: Fade in and out */
-        //status_led_fade(&status_led); 
-
-        /* Call ctx.execute() */
-        ctx.execute(NULL);
-
-        /* NOTE: PA0 for first button interrupt test. CN7 Pin 28 */ 
-
- 
-        /* Do other work */ 
+        ctx.execute(NULL);              /* state-specific main */
+        /* do other work */
     }
     return 0;
 }

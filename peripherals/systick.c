@@ -4,7 +4,7 @@
 
 #define BIT(x) (1U << (x))
 #define CLOCK_SPEED     (16000000)
-#define DEFAULT_TICKS   (16000000 / 1000)
+#define DEFAULT_TICKS   (CLOCK_SPEED / 1000)
 #define NO  (0)
 #define YES (1)
 #define OFF (0)

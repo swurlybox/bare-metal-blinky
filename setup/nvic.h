@@ -13,6 +13,7 @@ struct nvic {
 /* NOTE: More like a programmer's model of the NVIC */
 #define NVIC ((struct nvic *) 0xE000E004)
 
+void nvic_set_interrupt_prio(uint32_t interruptno);
 void nvic_status(void);
 void enable_irq(uint32_t interruptno);
 

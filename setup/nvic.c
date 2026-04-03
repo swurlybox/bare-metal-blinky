@@ -3,6 +3,10 @@
 
 #define BIT(x) (1U << (x))
 
+void nvic_set_interrupt_prio(uint32_t intno) {
+    (void) intno; 
+}
+
 void nvic_status(void) {
     uint8_t intlinesnum = (NVIC->ICTR & 15U);
     printf("Supported number of interrupts: %u\r\n", (intlinesnum + 1) * 32U);

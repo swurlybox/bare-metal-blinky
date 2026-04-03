@@ -8,12 +8,10 @@ struct dma {
         S3M1AR, S3FCR, S4CR, S4NDTR, S4PAR, S4M0AR, S4M1AR, S4FCR, S5CR,
         S5NDTR, S5PAR, S5M0AR, S5M1AR, S5FCR, S6CR, S6NDTR, S6PAR, S6M0AR,
         S6M1AR, S6FCR, S7CR, S7NDTR, S7PAR, S7M0AR, S7M1AR, S7FCR; 
-}
+};
 
 #define DMA1 ((struct dma *) 0x40026000)
 #define DMA2 ((struct dma *) 0x40026400)
-
-
 
 /*
     NOTE: Each entry's index indicates its associated stream, so the first

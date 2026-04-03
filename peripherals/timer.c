@@ -2,9 +2,12 @@
 #include "rcc.h"
 
 #define BIT(x) (1U << (x))
+/* changed from 16MHz to 32MHz, but not used atm so maybe don't worry. */
 #define CLOCK_SPEED (16000000)
 #define ARR_VAL     (1000)
 #define TIMER_FREQ  (1000)
+
+
 
 /* NOTE: Initializes TIM2 Channel 1 for PWM output.
     Configurations:
@@ -21,7 +24,10 @@ void timer_init(void) {
     TIM2->CCMR1 |= (6U << 4) | BIT(3);  /* Set PWM mode, enable preload */
 
     /* Set the prescaler and ARR initial values */
-    TIM2->PSC = 15; /* +1 internally to equal 16 (avoids divide by 0 error) */
+    /* looks like we're aiming for 1000000MHz frequency, so if 32000000,
+        set to 31 */
+    TIM2->PSC = 31; /* +1 internally to equal 16 (avoids divide by 0 error) */
+    /* set granularity to 1000*/
     TIM2->ARR = ARR_VAL - 1; /* including 0 so -1 */
     TIM2->CCR1 = TIM2->ARR / 2;
 

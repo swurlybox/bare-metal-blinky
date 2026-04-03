@@ -3,6 +3,7 @@
 #include "rcc.h"
 #include <math.h>
 
+/* changed from 16MHz to 32MHz*/
 #define FREQ (16000000U)
 #define BIT(x) (1U << (x))
 

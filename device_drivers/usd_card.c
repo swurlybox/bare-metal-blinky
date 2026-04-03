@@ -230,6 +230,8 @@ uint8_t sd_card_init() {
     sd_card_power_on();
     if (sd_card_enter_spi() == FAIL) { return FAIL; } 
     if (sd_card_spi_initialize() == FAIL) { return FAIL; }
+    /* crank up spi frequency: 8MHz on clear */
+    SPI2->CR1 &= ~(0b111U << 3U);
     return SUCCESS;
 };
 
@@ -284,6 +286,8 @@ uint8_t sd_card_multi_read(uint32_t LBA, uint8_t *srcbuf, uint32_t sec_cnt) {
     /* SET CMD12: STOP_TRANSMISSION */
     set_cmd(&CMD, 12, NOARGS, NOCRC);
 
+    printf("begin receiving blocks\r\n");
+
     /* RECEIVE SEC_CNT DATA BLOCKS */
     int i = 0;
     while (sec_cnt-- > 0) {
@@ -295,6 +299,7 @@ uint8_t sd_card_multi_read(uint32_t LBA, uint8_t *srcbuf, uint32_t sec_cnt) {
             receive_r1(&RES1);
             return FAIL;
         }
+
         /* Start copying data blocks over to srcbuf. */
         while (i++ < SECTOR_SIZE) {    
             *srcbuf++ = spi_transfer((uint8_t) 0xFF);
@@ -303,6 +308,7 @@ uint8_t sd_card_multi_read(uint32_t LBA, uint8_t *srcbuf, uint32_t sec_cnt) {
         receive_r2(&RES2);
         i = 0;
     }
+    printf("done reading blocks\r\n");
 
     /* CMD12: STOP_TRANSMISSION */
     send_cmd(&CMD);

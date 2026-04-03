@@ -3,27 +3,21 @@
 
 #include <stdint.h>
 
-struct i2c {
+typedef struct i2c {
     volatile uint32_t CR1, CR2, OAR1, OAR2, DR, SR1, SR2, CCR, TRISE, FLTR;
-};
+} I2C_Handle;
 
-/* pointer to the base of the i2c peripheral: APB1 */
-#define I2C1 ((struct i2c *) 0x40005400)
+/* APB1 */
+#define I2C1 ((I2C_Handle *) 0x40005400)
+#define I2C2 ((I2C_Handle *) 0x40005800)
+#define I2C3 ((I2C_Handle *) 0x40005C00)
 
-/* i2c init function which enables i2c peripheral clock and some i2c
-    interface initial configurations. */
+/* Initialize internal I2C peripheral. */
 void i2c1_init(void);
+void i2c3_init(void);
 
-/* encapsulates a typical transmit i2c communication. Data needs to be
-    formatted beforehand. */
-void i2c1_transmit(uint8_t address, uint8_t *data, uint32_t data_size);
-
-
-/* i think this is a good starting point, and is probably enough
-    to get an SSD1306 driver going. */
-/* some sort of basic write function to write a byte of data to dr */
-void i2c1_write(uint8_t byte);
-void i2c1_start(void);  /* start condition */
-void i2c1_stop(void);   /* stop condition */
+/* Send a single I2C packet. */
+void i2c_transmit(I2C_Handle *ptr, uint8_t address, uint8_t *data,
+    uint32_t data_size);
 
 #endif
