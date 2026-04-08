@@ -12,7 +12,6 @@
 #define BIT(x) (1U << (x))
 #define DMA1_STREAM7_INTERRUPT_NO   (47)
 
-
 void i2s3_init(void) {
     /*
         Set up PLLI2S dividers
@@ -164,15 +163,31 @@ void spi_init(void) {
     #endif 
 }
 
+/* pointer to the data we're trying to send. */
+void spi_block_transfer_read(uint8_t *srcbuf) {
+    //SPI2->CR1 |= BIT(6);
+    int i = 0;
+
+    while (i++ < 512) {
+        SPI2->DR = (uint32_t) 0xFF;
+        while ((SPI2->SR & BIT(7)) || !(SPI2->SR & BIT(0))) {
+            (void) 0;   /* Wait till RX_buffer non-empty and SPI isn't busy. */
+        }
+        *srcbuf++ = (uint8_t) SPI2->DR;
+    }
+    //SPI2->CR &= ~BIT(6);
+    return;
+}
+
 /* Single byte transfer. Nice to have for its granularity. */
 uint8_t spi_transfer(uint8_t tx_data) {
     uint8_t rx_data = 0;
-    SPI2->CR1 |= BIT(6);                /* Enable SPI communication */
+    //SPI2->CR1 |= BIT(6);                /* Enable SPI communication */
     SPI2->DR = (uint32_t) (tx_data);    /* TX_buffer transmit, toggles SCLK */
     while ((SPI2->SR & BIT(7)) || !(SPI2->SR & BIT(0))) {
         (void) 0;   /* Wait till RX_buffer non-empty and SPI isn't busy. */
     } 
     rx_data = (uint8_t) SPI2->DR;       /* Read RX_buffer, clears RXNE bit */
-    SPI2->CR1 &= ~BIT(6);               /* Disable SPI communication */
+    //SPI2->CR1 &= ~BIT(6);               /* Disable SPI communication */
     return rx_data;
 }

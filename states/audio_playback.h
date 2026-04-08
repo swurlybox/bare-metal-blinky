@@ -6,7 +6,7 @@
 
 #define FREE    (0)
 #define DATA_R  (1)
-#define INPUT_BUF_SIZE  (16000) /* enough for ~10 mp3 frames. */
+#define INPUT_BUF_SIZE  (512 * 2) /* originally 16kb, reduced for playback */
 
 typedef struct pcm_t {
     short arr[MINIMP3_MAX_SAMPLES_PER_FRAME];   /* decoded mp3 pcm data */

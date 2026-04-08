@@ -2,6 +2,8 @@
 #include "peripherals/spi.h"
 #include "peripherals/systick.h"
 
+#include "peripherals/dma.h"
+
 /* NOTE: Debugging */
 #include <stdio.h>
 
@@ -134,10 +136,16 @@ static void sd_card_power_on() {
     SPI2->CR1 |= 0b101U << 3U;          // Baud rate: 250KHz
     SPI2->CR1 |= BIT(8);    
     SPI2->CR1 |= BIT(9);                // CS High
+ 
+    SPI2->CR1 |= BIT(6);
+
     for (int i = 0; i < 10; i++) {
         spi_transfer((uint8_t) 0xFF);   // MOSI High
     }
     SPI2->CR1 &= ~(BIT(9)); // Reset SSM to allow HW control of CS pin.
+ 
+    SPI2->CR1 &= ~BIT(6);
+
     printf("SD card has finished powering on!\r\n");
 }
 
@@ -149,7 +157,9 @@ static uint8_t sd_card_enter_spi() {
 
     /* CMD0: RESET */
     set_cmd(&CMD, 0, NOARGS, 0b1001010);
-    
+ 
+    SPI2->CR1 |= BIT(6);
+
     resend:
     send_cmd(&CMD);
     receive_r1(&RES1);
@@ -165,6 +175,8 @@ static uint8_t sd_card_enter_spi() {
         }
     }
 
+    SPI2->CR1 &= ~BIT(6);
+    
     printf("SD card entered SPI mode!\r\n");
     return SUCCESS;
 }
@@ -178,6 +190,8 @@ static uint8_t sd_card_spi_initialize(void) {
  
     /*  Send CMD8 w/ VHS set to 3.3V range and 0xAA check pattern */
     set_cmd(&CMD, 8, BIT(8) | CHECK_PATTERN, NOCRC);
+ 
+    SPI2->CR1 |= BIT(6);
 
     resend_cmd8:
     send_cmd(&CMD);
@@ -221,6 +235,9 @@ static uint8_t sd_card_spi_initialize(void) {
             return FAIL;
         }
     }
+ 
+    SPI2->CR1 &= ~BIT(6);
+
     printf("SD card entered SPI data transfer mode!\r\n");
     return SUCCESS;
 }
@@ -239,6 +256,8 @@ uint8_t sd_card_get_status(void) {
     cmd_t CMD = {0};
     r2_t RES2 = {0};
 
+    SPI2->CR1 |= BIT(6);
+
     /* CMD13: SEND_STATUS */
     set_cmd(&CMD, 13, NOARGS, NOCRC);
     send_cmd(&CMD);
@@ -250,6 +269,9 @@ uint8_t sd_card_get_status(void) {
     #ifdef DEV_ENV
     printf("SD card status good\r\n");
     #endif
+
+    SPI2->CR1 &= ~BIT(6);
+    
     return SUCCESS;
 }
 
@@ -273,6 +295,8 @@ uint8_t sd_card_multi_read(uint32_t LBA, uint8_t *srcbuf, uint32_t sec_cnt) {
     r1_t RES1 = {0};    // R1 responses, data_start and data_error tokens
     r2_t RES2 = {0};    // For 16-bit CRC
 
+    SPI2->CR1 |= BIT(6);
+
     /* SEND CMD18: MULTI_BLOCK_READ */
     set_cmd(&CMD, 18, LBA, NOCRC);
     send_cmd(&CMD);
@@ -289,7 +313,7 @@ uint8_t sd_card_multi_read(uint32_t LBA, uint8_t *srcbuf, uint32_t sec_cnt) {
     printf("begin receiving blocks\r\n");
 
     /* RECEIVE SEC_CNT DATA BLOCKS */
-    int i = 0;
+    //int i = 0;
     while (sec_cnt-- > 0) {
         /* Expect data start token */
         receive_r1(&RES1);
@@ -300,13 +324,19 @@ uint8_t sd_card_multi_read(uint32_t LBA, uint8_t *srcbuf, uint32_t sec_cnt) {
             return FAIL;
         }
 
+        /* Implement block transfer method: NOTE: could possibly use DMA? */
+        spi_block_transfer_read(srcbuf);
+        srcbuf+=SECTOR_SIZE;
+
         /* Start copying data blocks over to srcbuf. */
+        /* 
         while (i++ < SECTOR_SIZE) {    
             *srcbuf++ = spi_transfer((uint8_t) 0xFF);
         }
+        */
         /* Receive 16-bit CRC (We won't do anything w/ it though) */
         receive_r2(&RES2);
-        i = 0;
+        //i = 0;
     }
     printf("done reading blocks\r\n");
 
@@ -316,6 +346,8 @@ uint8_t sd_card_multi_read(uint32_t LBA, uint8_t *srcbuf, uint32_t sec_cnt) {
     do {
         receive_byte(&RES1);
     } while(RES1.arr[0] == 0x00);   // Till res and busy signal clear.
+ 
+    SPI2->CR1 &= ~BIT(6);
 
     return SUCCESS;
 }

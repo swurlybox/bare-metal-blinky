@@ -35,8 +35,8 @@ extern void DMA1_Stream7_Handler(void);
 __attribute__((section(".vectors"))) void (*const tab[16 + 96])(void) = {
     _estack, _reset, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, SysTick_Handler,
     0, 0, 0, 0, 0, 0, EXTI0_Handler, EXTI1_Handler, EXTI2_Handler, 
-    EXTI3_Handler, EXTI4_Handler, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, EXTI9_5_Handler, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+    EXTI3_Handler, EXTI4_Handler, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, EXTI9_5_Handler, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
     , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, DMA1_Stream7_Handler
 };
 

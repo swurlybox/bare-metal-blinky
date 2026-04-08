@@ -33,12 +33,6 @@ SPI3/I2S3:  /* TLV DAC */
     WS:     PA15    AF6
     CK:     PC10    AF6
 
-I2C2:   /* TLV DAC Config, could daisy-chain w/ display, but nah */
-    PB10:   SCL
-
-    find different pin since pb11 isn't available
-    PB11:   SDA
-
-I2C3:
+I2C3:   /* TLVDAC config */
     PA8:    SCL
     PB4:    SDA

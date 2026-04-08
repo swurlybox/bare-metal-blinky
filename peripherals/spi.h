@@ -18,5 +18,6 @@ void i2s3_stop(void);
 
 void spi_init(void);
 uint8_t spi_transfer(uint8_t byte);
+void spi_block_transfer_read(uint8_t *srcbuf);
 
 #endif
