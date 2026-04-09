@@ -58,7 +58,8 @@ static void     sd_card_power_on(void);
 static uint8_t  sd_card_enter_spi(void);
 static uint8_t  sd_card_spi_initialize(void);
 
-static void set_cmd(cmd_t *cmd, uint8_t cmdno, uint32_t args, uint8_t crc7) {
+static inline void set_cmd(cmd_t *cmd, uint8_t cmdno, uint32_t args,
+    uint8_t crc7) {
     uint8_t *ptr = cmd->arr;
     cmdno &= 0b111111;  /* Mask excess bits */
     crc7 &= 0b1111111;
@@ -69,7 +70,7 @@ static void set_cmd(cmd_t *cmd, uint8_t cmdno, uint32_t args, uint8_t crc7) {
     *ptr = (uint8_t) ((crc7 << 1U) | 1U);       /* Set CRC */
 }
 
-static void send_cmd(cmd_t *cmd) {
+static inline void send_cmd(cmd_t *cmd) {
     uint8_t *ptr = cmd->arr;
     for(int i = 0; i < 6; i++, ptr++) {
         spi_transfer(*ptr);
@@ -79,14 +80,14 @@ static void send_cmd(cmd_t *cmd) {
     }
 }
 
-static void send_byte(uint8_t byte) {
+static inline void send_byte(uint8_t byte) {
     spi_transfer(byte);
     #ifdef DEV_ENV
     printf("Byte Sent: %x\r\n", byte);
     #endif    
 }
 
-static void receive_r1(r1_t *response) {
+static inline void receive_r1(r1_t *response) {
     while ((response->arr[0] = spi_transfer((uint8_t) 0xFF)) == 0xFF) {
         (void) 0;
     }
@@ -95,7 +96,7 @@ static void receive_r1(r1_t *response) {
     #endif
 }
 
-static void receive_r2(r2_t *response) {
+static inline void receive_r2(r2_t *response) {
     while ((response->arr[0] = spi_transfer((uint8_t) 0xFF)) == 0xFF) {
         (void) 0;
     }
@@ -107,7 +108,7 @@ static void receive_r2(r2_t *response) {
     #endif
 }
 
-static void receive_r7(r7_t *response) {
+static inline void receive_r7(r7_t *response) {
     while ((response->arr[0] = spi_transfer((uint8_t) 0xFF)) == 0xFF) {
         (void) 0;
     }
@@ -121,7 +122,7 @@ static void receive_r7(r7_t *response) {
     #endif
 }
 
-static void receive_byte(r1_t *response) {
+static inline void receive_byte(r1_t *response) {
     response->arr[0] = spi_transfer((uint8_t) 0xFF);
     #ifdef DEV_ENV
     printf("Byte Received: %x\r\n", response->arr[0]);
@@ -310,10 +311,14 @@ uint8_t sd_card_multi_read(uint32_t LBA, uint8_t *srcbuf, uint32_t sec_cnt) {
     send_cmd(&CMD);
 
     receive_r1(&RES1);
+    
+    /* NOTE:  try to optimize? */
+    /* 
     if (RES1.arr[0] != 0x00) {
         printf("R1 response of CMD18 not good: %x\r\n", RES1.arr[0]);
         return FAIL;
     }
+    */
     
     /* SET CMD12: STOP_TRANSMISSION */
     set_cmd(&CMD, 12, NOARGS, NOCRC);
@@ -325,13 +330,15 @@ uint8_t sd_card_multi_read(uint32_t LBA, uint8_t *srcbuf, uint32_t sec_cnt) {
     while (sec_cnt-- > 0) {
         /* Expect data start token */
         receive_r1(&RES1);
-        
+    
+        /*    
         if (RES1.arr[0] != 0xFE) {
             printf("Didn't receive data start token. Aborting. \r\n");
             send_cmd(&CMD);
             receive_r1(&RES1);
             return FAIL;
         }
+        */
         
         /* Implement block transfer method: NOTE: could possibly use DMA? */
         spi_block_transfer_read(srcbuf);

@@ -90,10 +90,12 @@ void DMA1_Stream7_Handler(void) {
     } else {
         audio_player.dma_ptr = &audio_player.pcm0;
     }
+    /*
     if(audio_player.dma_ptr->status == FREE) {
-        /* dma consumption faster than producer. */
+        // dma consumption faster than producer.
         printf("faster than producer\r\n");
     }
+    */
 }
 
 

@@ -147,15 +147,6 @@ void audio_playback_main(void *args) {
     
     //printf("start read data\r\n");
 
-    /* TODO: bottleneck is here. Reading data from SPI is really fkin slow.
-        maybe takes 300-400ms to grab 16000 bytes. HUGE bottleneck here
-        actually.
-
-        We could configure the clocks to drive a higher SPI clock frequency.
-        We could try synchronizing the consumer and producer pointers.
-
-
-        */
     /* reading a chunk from the file into input buf */
     pos = f_tell(&audio_player.mp3_file);
     if (f_read(&audio_player.mp3_file, audio_player.input_buf, INPUT_BUF_SIZE, 
