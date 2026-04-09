@@ -27,7 +27,7 @@
 #include <stdio.h>
 #include <math.h>
 
-#define CLOCK_SPEED (16000000)
+#define CLOCK_SPEED (44000000)
 #define TICKS_PER_MILLISECOND (CLOCK_SPEED / 1000)
 #define SECTOR_SIZE (512)
 #define CWD_MAX_LEN (512)
@@ -36,9 +36,18 @@
 #define DOWN    (0)
 #define UP      (1)
 
+#define BIT(x) (1U << x)
+
 GBL_CTX_T ctx;
 
 void system_init(void) {
+    /* try amping up APB1 clock speed to 40MHz */
+    /* Use PLL_R, set N to be 80, gets divided by R=2 to get 40MHz sysclk */
+    RCC->PLLCFGR &= ~(0b111111111U << 6);
+    RCC->PLLCFGR |= (88U << 6); /* set pll_n to 80 */
+    RCC->CR |=  BIT(24);         /* main pll on */
+    RCC->CFGR   |= 0b11;        /* set pll_r as sysclk */
+
     /* Internal peripheral initializations. */
     systick_init(TICKS_PER_MILLISECOND);    /* systick */
     uart_init(USART2, 115200);              /* usart */

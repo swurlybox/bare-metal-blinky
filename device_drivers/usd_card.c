@@ -132,8 +132,11 @@ static void receive_byte(r1_t *response) {
     Set MOSI and CS high for atleast 74 cycles at 100-400KHz. */
 static void sd_card_power_on() { 
     delay(3);
+    
     SPI2->CR1 &= ~(0b111U << 3U);
-    SPI2->CR1 |= 0b101U << 3U;          // Baud rate: 250KHz
+    SPI2->CR1 |= 0b101U << 3U;   /* fpclk/64 ~ 250KHz, which is safe for SD */
+    /* baud rate handled in spi init function*/
+
     SPI2->CR1 |= BIT(8);    
     SPI2->CR1 |= BIT(9);                // CS High
  
@@ -162,11 +165,14 @@ static uint8_t sd_card_enter_spi() {
 
     resend:
     send_cmd(&CMD);
+
+    delay(100);
+
     receive_r1(&RES1);
 
     /* Expecting 0x01 (idle bit set) as as response. */
     if (RES1.arr[0] != 0x01) {  
-        if (attempt++ < 3) {
+        if (attempt++ < 10) {
             goto resend;
         }
         else {
@@ -224,6 +230,7 @@ static uint8_t sd_card_spi_initialize(void) {
     
     set_cmd(&CMD, 41, (1U << 30U), NOCRC);
     send_cmd(&CMD);
+    delay(100);
     receive_r1(&RES1);
 
     if (RES1.arr[0] != 0x0) {
@@ -249,6 +256,7 @@ uint8_t sd_card_init() {
     if (sd_card_spi_initialize() == FAIL) { return FAIL; }
     /* crank up spi frequency: 8MHz on clear */
     SPI2->CR1 &= ~(0b111U << 3U);
+    SPI2->CR1 |= (0b001U << 3U);    /* 10 MHz limit? */
     return SUCCESS;
 };
 
@@ -310,20 +318,21 @@ uint8_t sd_card_multi_read(uint32_t LBA, uint8_t *srcbuf, uint32_t sec_cnt) {
     /* SET CMD12: STOP_TRANSMISSION */
     set_cmd(&CMD, 12, NOARGS, NOCRC);
 
-    printf("begin receiving blocks\r\n");
+    //printf("begin receiving blocks\r\n");
 
     /* RECEIVE SEC_CNT DATA BLOCKS */
     //int i = 0;
     while (sec_cnt-- > 0) {
         /* Expect data start token */
         receive_r1(&RES1);
+        
         if (RES1.arr[0] != 0xFE) {
             printf("Didn't receive data start token. Aborting. \r\n");
             send_cmd(&CMD);
             receive_r1(&RES1);
             return FAIL;
         }
-
+        
         /* Implement block transfer method: NOTE: could possibly use DMA? */
         spi_block_transfer_read(srcbuf);
         srcbuf+=SECTOR_SIZE;
@@ -338,7 +347,7 @@ uint8_t sd_card_multi_read(uint32_t LBA, uint8_t *srcbuf, uint32_t sec_cnt) {
         receive_r2(&RES2);
         //i = 0;
     }
-    printf("done reading blocks\r\n");
+    //printf("done reading blocks\r\n");
 
     /* CMD12: STOP_TRANSMISSION */
     send_cmd(&CMD);

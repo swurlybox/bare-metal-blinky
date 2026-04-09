@@ -4,7 +4,7 @@
 #include <math.h>
 
 /* changed from 16MHz to 32MHz*/
-#define FREQ (16000000U)
+#define FREQ (44000000U)
 #define BIT(x) (1U << (x))
 
 /* Initialize USART2 for serial debug output, sent to the host PC

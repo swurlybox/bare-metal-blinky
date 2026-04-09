@@ -164,7 +164,7 @@ void spi_init(void) {
 }
 
 /* pointer to the data we're trying to send. */
-void spi_block_transfer_read(uint8_t *srcbuf) {
+inline void spi_block_transfer_read(uint8_t *srcbuf) {
     //SPI2->CR1 |= BIT(6);
     int i = 0;
 
