@@ -162,6 +162,7 @@ void audio_playback_main(void *args) {
             back to 0. */
         pause_play(NULL);
         f_lseek(&audio_player.mp3_file, 0);
+        return;
     }
     //printf("start decoding\r\n");
 
