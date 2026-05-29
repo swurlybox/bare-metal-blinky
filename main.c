@@ -66,7 +66,7 @@ void system_init(void) {
     f_mount(&ctx.fs, "", LAZYMOUNT);
     ctx.status = 1;     /* first entry to state flag. */
 
-    ctx.execute = audio_playback_main;  // TODO: hook to ff_nav_main() later
+    ctx.execute = ff_nav_main;  // TODO: hook to ff_nav_main() later
 }
 
 typedef struct {

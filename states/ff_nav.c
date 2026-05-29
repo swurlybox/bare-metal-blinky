@@ -5,7 +5,10 @@
 #include "device_drivers/SSD1306/graphics_lib.h"
 #include "device_drivers/SSD1306/ssd1306_driver.h"
 
+#include "audio_playback.h"     /* for state transition to audio_playback */
+
 #include <stdio.h>
+#include <string.h>
 
 #define BIT(x) (1U << (x))
 #define CWD_SIZE    (512)
@@ -33,8 +36,13 @@ static FF_NAV_T ff_nav = {0};
 
 static void ff_nav_up();
 static void ff_nav_down();
-static void ff_nav_select();
+static void ff_nav_select(); /* if we select a file, pull up metadata submenu*/
 static void ff_nav_cancel();
+
+/* NOTE: Can't rely on file-extension to determine if its an MP3 file. 
+    But for now we'll do that for simplicity, even if it is wrong.
+    0 on success, non-zero on error.  */
+static int check_is_mp3_file(const char *str);
 
 void ff_nav_main(void *args) {
     (void) args;
@@ -164,6 +172,10 @@ static void ff_nav_cancel() {
     list_directory(ff_nav.cwd);
 }
 
+/* TODO: transition into audio_playback state. Keep track of the targeted file
+    to be passed into audio_playback state, all we need is the filename.
+    Audio playback searches for that file in the current directory via relative
+    pathing. */
 static void ff_nav_select() { 
     FRESULT res;
     DIR dirobj;
@@ -189,6 +201,14 @@ static void ff_nav_select() {
     } else {
         /* Selected a file. */
         printf("file selected: %s\r\n", fno.fname);
+        /* we're using LFN, so the file name is long enough */
+        strcpy(ctx.selected_file, fno.fname);
+        /* TODO: open up a sub-menu to confirm if user wants to play
+            the mp3 file. */
+        if (check_is_mp3_file(ctx.selected_file) == 0) {
+            ctx.execute = audio_playback_main;
+            ctx.status |= BIT(0);
+        }
     }
 
     f_closedir(&dirobj);
@@ -213,4 +233,15 @@ static void ff_nav_down() {
         ff_nav.index++;
     }
     list_directory(ff_nav.cwd);
+}
+
+static int check_is_mp3_file(const char *filename) {
+    /* check the filename ends in a .mp3 extension */
+    /* compare the memory addresses to see if .mp3 is indeed at the end. */
+    if (strstr(filename, ".mp3") == filename + (strlen(filename) - 4)) {
+        printf("%s is mp3 file!\n", filename);
+        return 0;
+    }
+    printf("%s is not an mp3 file!\n", filename);
+    return -1;
 }

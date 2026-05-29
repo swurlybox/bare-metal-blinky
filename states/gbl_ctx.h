@@ -5,12 +5,14 @@
 #include "device_drivers/fatfs_module/ff.h"
 #include <stdint.h>
 
-/* generally, all relevant global variables should go in this structure. */
+#define MAX_FN_SIZE 256
 
+/* generally, all relevant global variables should go in this structure. */
 typedef struct {
     void (*execute)(void *args);    /* state-specific main function */
     uint8_t status;                 /* 8 bits for flags */
     /* BIT(0) indicates first entry to state. */
+    char selected_file[MAX_FN_SIZE];
     FATFS fs;                       /* filesystem-object */
 } GBL_CTX_T;
 

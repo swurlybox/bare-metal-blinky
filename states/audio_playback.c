@@ -8,6 +8,8 @@
 #include "device_drivers/SSD1306/graphics_lib.h"
 #include "device_drivers/SSD1306/ssd1306_driver.h"
 
+#include "ff_nav.h" // get access to ff_nav main for state transition
+
 /* NOTE: debugging */
 #include "peripherals/dma.h"    
 
@@ -18,6 +20,8 @@
 
 #define PLAYING (0)
 #define PAUSED  (1)
+
+#define BIT(n) (1U << (n))
 
 audio_player_t audio_player;
 static uint8_t play_state = PLAYING;
@@ -39,14 +43,33 @@ static void exit_state(void *);
 
 static void cycle_up(void *args) {
     (void) args;
+    printf("cycle up\n");
 }
 
 static void cycle_down(void *args) {
     (void) args;
+    printf("cycle down\n");
 }
 
 static void exit_state(void *args) {
     (void) args;
+    printf("exit state\n");
+    /* this gets called by buttons_listen(), we can change the ctx.execute
+        function to the filesystem navigation state, as well as pause the
+        audio. We should also set the first entry flag, such that the
+        next call to ctx.execute will initialize the filesystem navigation
+        state.  */
+    ctx.execute = ff_nav_main;
+    if (play_state == PLAYING) {
+        printf("paused\r\n");
+        play_state = PAUSED;
+        i2s3_stop();
+        
+        graphics_clear();
+        display_update();
+        printf("I2S3->I2SCFGR: %lx\r\n", I2S3->I2SCFGR);
+    }
+    ctx.status |= BIT(0);
 }
 
 static void pause_play(void *args) {
@@ -78,13 +101,16 @@ static void pause_play(void *args) {
 void audio_playback_main(void *args) {
     (void) args;
     static pcm_t *ap_ptr = &audio_player.pcm0;
+    static char *enter_txt = "Enter Audio Playback";
+    static char *select_txt = "Select: Pause/Play";
+    static char *cancel_txt = "Cancel: Back to filesystem";
 
     /* do any initializations of important audio-playback data structures. */    
     if (ctx.status & 1U) {
         /* TEST: assumption, file is at root. open our test mp3 file. */
         FRESULT res;
         /* TODO: Get filename from cwd */
-        res=f_open(&audio_player.mp3_file, "the_moving_fortress.mp3", FA_READ);
+        res=f_open(&audio_player.mp3_file, ctx.selected_file, FA_READ);
         if (res != FR_OK) {
             printf("couldn't open file\r\n");
             return;
@@ -112,6 +138,13 @@ void audio_playback_main(void *args) {
            state of the music display really depends on the buttons pressed. */
         play_state = PAUSED;
         i2s3_stop();
+
+        graphics_clear();
+        graphics_draw_line_chars(enter_txt, 0, 0, (uint8_t)strlen(enter_txt));
+        graphics_draw_line_chars(select_txt, 1, 0,(uint8_t)strlen(select_txt));
+        graphics_draw_line_chars(cancel_txt, 2, 0,(uint8_t)strlen(cancel_txt));
+        display_update();
+
 
         ctx.status &= (uint8_t)~(1U);
     }
